@@ -1,54 +1,49 @@
-let cache = { data: null, timestamp: 0 };
-const CACHE_TIME = 30 * 60 * 1000;
-
-// Midnight Season 1 Struktur
-const MIDNIGHT_RAIDS = [
-  { slug: "the-voidspire", name: "Die Leerenspitze", bosses: 6 },
-  { slug: "the-dreamrift", name: "Der Traumriss", bosses: 1 },
-  { slug: "march-on-queldanas", name: "Marsch auf Quel'Danas", bosses: 2 }
-];
-
-export default async function handler(req, res) {
+async function loadRaid() {
   try {
+    const res = await fetch("/api/raid");
+    const data = await res.json();
 
-    if (cache.data && Date.now() - cache.timestamp < CACHE_TIME) {
-      return res.status(200).json(cache.data);
+    let html = `<h2>Raid Progress – Midnight Season 1</h2>`;
+
+    if (!data.raids || data.raids.length === 0) {
+      html += `<p>Noch kein Raid verfügbar</p>`;
+    } else {
+      data.raids.forEach(raid => {
+
+        // Wenn alle Werte 0 sind → nichts anzeigen
+        const allZero =
+          raid.mythic.completed === 0 &&
+          raid.heroic.completed === 0 &&
+          raid.normal.completed === 0;
+
+        if (allZero) {
+          html += `
+            <div style="margin-bottom:15px;">
+              <strong>${raid.name}</strong><br>
+              <span style="color:#9ca3af; font-size:13px;">
+                Noch kein Progress vorhanden
+              </span>
+            </div>
+          `;
+        } else {
+          html += `
+            <div style="margin-bottom:15px;">
+              <strong>${raid.name}</strong>
+              <div>Mythic: ${raid.mythic.completed}/${raid.mythic.total}</div>
+              <div>Heroic: ${raid.heroic.completed}/${raid.heroic.total}</div>
+              <div>Normal: ${raid.normal.completed}/${raid.normal.total}</div>
+            </div>
+          `;
+        }
+      });
     }
 
-    const response = await fetch(
-      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=raid_progression"
-    );
-
-    const data = await response.json();
-    const progression = data.raid_progression || {};
-
-    const raids = MIDNIGHT_RAIDS.map(raid => {
-      const raidData = progression[raid.slug];
-
-      return {
-        name: raid.name,
-        mythic: {
-          completed: raidData?.mythic?.bosses_killed || 0,
-          total: raid.bosses
-        },
-        heroic: {
-          completed: raidData?.heroic?.bosses_killed || 0,
-          total: raid.bosses
-        },
-        normal: {
-          completed: raidData?.normal?.bosses_killed || 0,
-          total: raid.bosses
-        }
-      };
-    });
-
-    const result = { raids };
-
-    cache = { data: result, timestamp: Date.now() };
-
-    res.status(200).json(result);
+    document.getElementById("raid").innerHTML = html;
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    document.getElementById("raid").innerHTML =
+      `<h2>Raid Progress</h2><p>Fehler beim Laden</p>`;
   }
 }
+
+document.addEventListener("DOMContentLoaded", loadRaid);
