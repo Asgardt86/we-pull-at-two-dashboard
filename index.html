@@ -38,19 +38,19 @@ h1 {
 }
 
 .progress-row {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .progress-label {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-  margin-bottom: 6px;
+  font-size: 13px;
+  margin-bottom: 5px;
 }
 
 .progress-bar {
   width: 100%;
-  height: 10px;
+  height: 8px;
   background: rgba(255,255,255,0.08);
   border-radius: 6px;
   overflow: hidden;
@@ -62,6 +62,14 @@ h1 {
   width: 0%;
   transition: width 0.6s ease;
 }
+
+.raid-title {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #cbd5e1;
+}
 </style>
 </head>
 
@@ -71,38 +79,14 @@ h1 {
 
 <div class="grid">
 
-  <div class="card" id="guild">
-    <h2>Gildenübersicht</h2>
-    <p>Lade Daten...</p>
-  </div>
-
   <div class="card" id="raid">
-    <h2>Raid Progress</h2>
+    <h2>Raid Progress – Midnight Season 1</h2>
     <p>Lade Daten...</p>
-  </div>
-
-  <div class="card" id="mythic">
-    <h2>Mythic+ Hall of Fame</h2>
-    <p>Neue Mythic+ Season startet bald.</p>
   </div>
 
 </div>
 
 <script>
-async function loadGuild() {
-  const res = await fetch("/api/guild");
-  const data = await res.json();
-
-  document.getElementById("guild").innerHTML = `
-    <h2>Gildenübersicht</h2>
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Realm:</strong> ${data.realm.name}</p>
-    <p><strong>Fraktion:</strong> ${data.faction.name}</p>
-    <p><strong>Mitglieder:</strong> ${data.member_count}</p>
-    <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
-  `;
-}
-
 function renderProgress(label, completed, total) {
   const percent = total === 0 ? 0 : (completed / total) * 100;
 
@@ -123,15 +107,20 @@ async function loadRaid() {
   const res = await fetch("/api/raid");
   const data = await res.json();
 
-  document.getElementById("raid").innerHTML = `
-    <h2>Raid Progress</h2>
-    ${renderProgress("Mythic", data.mythic.completed, data.mythic.total)}
-    ${renderProgress("Heroic", data.heroic.completed, data.heroic.total)}
-    ${renderProgress("Normal", data.normal.completed, data.normal.total)}
-  `;
+  let html = `<h2>Raid Progress – Midnight Season 1</h2>`;
+
+  data.raids.forEach(raid => {
+    html += `
+      <div class="raid-title">${raid.name}</div>
+      ${renderProgress("Mythic", raid.mythic.completed, raid.mythic.total)}
+      ${renderProgress("Heroic", raid.heroic.completed, raid.heroic.total)}
+      ${renderProgress("Normal", raid.normal.completed, raid.normal.total)}
+    `;
+  });
+
+  document.getElementById("raid").innerHTML = html;
 }
 
-loadGuild();
 loadRaid();
 </script>
 
