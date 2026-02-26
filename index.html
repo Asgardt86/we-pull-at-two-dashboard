@@ -2,60 +2,94 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>We Pull at Two – Dashboard</title>
 
 <style>
+
 body {
   margin: 0;
-  padding: 60px 40px;
+  padding: 50px 30px;
   background: radial-gradient(circle at top, #1b1f28, #0d1117 70%);
   font-family: "Segoe UI", sans-serif;
   color: #e5e7eb;
+  overflow-x: hidden; /* verhindert horizontales Scrollen */
 }
 
 h1 {
   text-align: center;
-  font-size: 36px;
-  letter-spacing: 2px;
+  font-size: 32px;
   margin-bottom: 20px;
-  color: #d1d5db;
-  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-#event-bar { margin-bottom: 20px; }
-#reset-container { margin-bottom: 20px; }
-#server-status { margin-bottom: 40px; }
+/* STICKY TOP BAR */
+#event-bar,
+#server-status {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  backdrop-filter: blur(12px);
+  padding: 10px 0;
+}
 
+#reset-container {
+  position: sticky;
+  top: 60px;
+  z-index: 998;
+}
+
+/* GRID */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .card {
   background: rgba(30, 41, 59, 0.6);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-  max-height: 500px;
-  overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
 
 .card h2 {
   margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 20px;
-  color: #f3f4f6;
+  font-size: 18px;
+  margin-bottom: 15px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
-.placeholder {
-  color: #9ca3af;
-  font-style: italic;
+/* Guild kompakter */
+#guild {
+  max-height: 240px;
 }
+
+#guild p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+/* MOBILE OPTIMIERUNG */
+@media (max-width: 600px) {
+  body {
+    padding: 30px 15px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+}
+
 </style>
 </head>
 
@@ -101,7 +135,6 @@ h1 {
 
 </div>
 
-<!-- MODULES -->
 <script src="events.js"></script>
 <script src="reset.js"></script>
 <script src="server.js"></script>
