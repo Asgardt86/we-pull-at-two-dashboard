@@ -1,16 +1,35 @@
-function renderBar(label, completed, total, color, glow, muted = false) {
+function renderBar(label, completed, total, type, isCurrent) {
+
   const percent = total === 0 ? 0 : (completed / total) * 100;
+  const isFull = completed === total && total > 0;
+
+  let color;
+  let glow = "none";
+
+  if (isCurrent) {
+    // 🟢 Aktuelle Raids
+    if (type === "mythic") color = "#7c3aed";
+    if (type === "heroic") color = "#ea580c";
+    if (type === "normal") color = "#16a34a";
+    glow = color;
+  } else {
+    // 🔵 Frühere Raids
+    if (isFull) {
+      color = "#d4af37";   // Gold
+      glow = "#facc15";
+    } else {
+      color = "#9ca3af";   // Silber
+    }
+  }
 
   return `
-    <div style="margin-bottom:14px;">
+    <div style="margin-bottom:12px;">
       <div style="
         display:flex;
         justify-content:space-between;
         font-size:12px;
-        margin-bottom:6px;
-        letter-spacing:0.5px;
-        text-transform:uppercase;
-        opacity:${muted ? "0.6" : "0.85"};
+        margin-bottom:5px;
+        opacity:0.85;
       ">
         <span>${label}</span>
         <span>${completed} / ${total}</span>
@@ -19,42 +38,39 @@ function renderBar(label, completed, total, color, glow, muted = false) {
         width:100%;
         height:8px;
         background:rgba(0,0,0,0.6);
-        border:1px solid ${muted ? "rgba(192,192,192,0.2)" : "rgba(255,215,0,0.15)"};
-        border-radius:8px;
+        border-radius:6px;
         overflow:hidden;
       ">
         <div style="
           height:100%;
           width:${percent}%;
-          background:${muted ? "#9ca3af" : `linear-gradient(90deg, ${color}, ${glow})`};
-          border-radius:8px;
-          box-shadow:${muted ? "none" : `0 0 10px ${glow}`};
-          transition:width 0.8s ease;
+          background:${color};
+          border-radius:6px;
+          box-shadow:${glow !== "none" ? `0 0 8px ${glow}` : "none"};
+          transition:width 0.6s ease;
         "></div>
       </div>
     </div>
   `;
 }
 
-function renderRaidPanel(title, raids, isCurrent = true) {
+function renderRaidPanel(title, raids, isCurrent) {
+
   let html = `
     <div style="
-      background:rgba(10,15,25,0.6);
-      border:1px solid ${isCurrent ? "rgba(255,215,0,0.15)" : "rgba(180,180,180,0.15)"};
-      border-radius:14px;
-      padding:20px;
-      margin-bottom:30px;
+      margin-bottom:35px;
     ">
-      <h2 style="
-        margin-top:0;
-        margin-bottom:20px;
-        font-size:17px;
-        letter-spacing:1px;
-        text-transform:uppercase;
+      <div style="
+        display:inline-block;
+        font-weight:bold;
+        font-size:16px;
+        margin-bottom:18px;
+        border-bottom:2px solid ${isCurrent ? "#d4af37" : "#94a3b8"};
+        padding-bottom:4px;
         color:${isCurrent ? "#d4af37" : "#cbd5e1"};
       ">
         ${title}
-      </h2>
+      </div>
   `;
 
   raids.forEach(raid => {
@@ -67,14 +83,10 @@ function renderRaidPanel(title, raids, isCurrent = true) {
     html += `
       <div style="
         margin-bottom:22px;
-        padding-bottom:16px;
-        border-bottom:1px solid rgba(255,255,255,0.05);
       ">
         <div style="
           font-weight:bold;
-          font-size:14px;
-          margin-bottom:10px;
-          color:${isCurrent ? "#f3f4f6" : "#d1d5db"};
+          margin-bottom:8px;
         ">
           ${raid.name}
         </div>
@@ -83,17 +95,17 @@ function renderRaidPanel(title, raids, isCurrent = true) {
     if (allZero) {
       html += `
         <div style="
-          color:#9ca3af;
           font-size:13px;
+          color:#9ca3af;
           font-style:italic;
         ">
           Noch kein Progress vorhanden
         </div>
       `;
     } else {
-      html += renderBar("Mythic", raid.mythic.completed, raid.mythic.total, "#7c3aed", "#c084fc", !isCurrent);
-      html += renderBar("Heroic", raid.heroic.completed, raid.heroic.total, "#ea580c", "#fb923c", !isCurrent);
-      html += renderBar("Normal", raid.normal.completed, raid.normal.total, "#16a34a", "#4ade80", !isCurrent);
+      html += renderBar("Mythic", raid.mythic.completed, raid.mythic.total, "mythic", isCurrent);
+      html += renderBar("Heroic", raid.heroic.completed, raid.heroic.total, "heroic", isCurrent);
+      html += renderBar("Normal", raid.normal.completed, raid.normal.total, "normal", isCurrent);
     }
 
     html += `</div>`;
