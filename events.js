@@ -1,4 +1,4 @@
-/* ------------------ WORLD EVENTS (HYBRID SYSTEM FIXED) ------------------ */
+/* ------------------ WORLD EVENTS (HYBRID SYSTEM PRO) ------------------ */
 
 function getFirstSunday(year, month) {
   const date = new Date(year, month, 1);
@@ -19,11 +19,18 @@ function daysBetween(date1, date2) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+function formatDate(date) {
+  return date.toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit"
+  });
+}
+
 function getDarkmoonEvents() {
   const now = new Date();
   const events = [];
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
     const start = getFirstSunday(date.getFullYear(), date.getMonth());
     const end = addDays(start, 6);
@@ -69,14 +76,24 @@ const VARIABLE_EVENTS = [
 
 function loadEvents() {
   const now = new Date();
-  const maxFuture = addDays(now, 30);
+  const maxFuture = addDays(now, 60); // 60 Tage
   const year = now.getFullYear();
 
-  const events = [
+  let events = [
     ...getDarkmoonEvents(),
     ...getFixedEvents(year),
     ...VARIABLE_EVENTS
   ];
+
+  // Nur aktive oder kommende Events
+  events = events.filter(event => {
+    const isActive = now >= event.start && now <= event.end;
+    const startsSoon = event.start > now && event.start <= maxFuture;
+    return isActive || startsSoon;
+  });
+
+  // Chronologisch sortieren
+  events.sort((a, b) => a.start - b.start);
 
   let html = `
     <div style="
@@ -90,9 +107,6 @@ function loadEvents() {
   events.forEach(event => {
 
     const isActive = now >= event.start && now <= event.end;
-    const startsSoon = event.start > now && event.start <= maxFuture;
-
-    if (!isActive && !startsSoon) return;
 
     let status = "";
     let color = "#3b82f6";
@@ -108,15 +122,18 @@ function loadEvents() {
 
     html += `
       <div style="
-        min-width:220px;
-        padding:12px 18px;
+        min-width:240px;
+        padding:14px 18px;
         border-radius:12px;
-        background:rgba(30,41,59,0.8);
+        background:rgba(30,41,59,0.85);
         border:1px solid rgba(255,255,255,0.08);
         box-shadow:0 5px 20px rgba(0,0,0,0.4);
       ">
         <div style="font-weight:bold; margin-bottom:6px;">
           ${event.name}
+        </div>
+        <div style="font-size:12px; color:#9ca3af; margin-bottom:6px;">
+          ${formatDate(event.start)} – ${formatDate(event.end)}
         </div>
         <div style="color:${color}; font-size:13px;">
           ${status}
