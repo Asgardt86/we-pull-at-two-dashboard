@@ -101,7 +101,7 @@ const VARIABLE_EVENTS = [
 
 function loadEvents() {
   const now = new Date();
-  const maxFuture = addDays(now, 60);
+  const maxFuture = addDays(now, 30);
   const year = now.getFullYear();
 
   let events = [
