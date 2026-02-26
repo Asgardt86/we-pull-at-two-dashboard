@@ -1,5 +1,5 @@
 const guildResponse = await fetch(
-  "https://eu.api.blizzard.com/data/wow/search/guild?namespace=profile-eu&name.en_US=We%20Pull%20at%20Two",
+  "https://eu.api.blizzard.com/data/wow/realm/index?namespace=dynamic-eu&locale=de_DE",
   {
     headers: {
       Authorization: `Bearer ${accessToken}`
@@ -7,6 +7,5 @@ const guildResponse = await fetch(
   }
 );
 
-const guildData = await guildResponse.json();
-
-return res.status(200).json(guildData);
+const data = await guildResponse.json();
+return res.status(200).json(data);
