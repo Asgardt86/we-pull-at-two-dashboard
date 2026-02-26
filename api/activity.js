@@ -13,34 +13,24 @@ function timeAgo(timestamp) {
   return `vor ${days} Tagen`;
 }
 
-function getCharacterName(entry) {
-  return (
-    entry.character?.name ||
-    entry.activity?.character?.name ||
-    "Unbekannt"
-  );
-}
-
 function buildDescription(entry) {
-  const name = getCharacterName(entry);
-  const type = entry.activity?.type || "ACTIVITY";
+  const type = entry.activity?.type;
 
-  switch (type) {
-    case "CHARACTER_ACHIEVEMENT":
-      return `🏆 ${name} hat einen Erfolg erhalten`;
+  if (type === "CHARACTER_ACHIEVEMENT" && entry.character_achievement) {
+    const name = entry.character_achievement.character.name;
+    const achievement = entry.character_achievement.achievement.name;
 
-    case "ENCOUNTER":
-      return `⚔️ ${name} hat einen Boss besiegt`;
-
-    case "LEVEL_UP":
-      return `🎯 ${name} hat eine neue Stufe erreicht`;
-
-    case "ITEM_LOOT":
-      return `📦 ${name} hat Beute erhalten`;
-
-    default:
-      return `📜 ${name} – ${type}`;
+    return `🏆 ${name} hat den Erfolg "${achievement}" erhalten`;
   }
+
+  if (type === "ENCOUNTER" && entry.encounter_completed) {
+    const name = entry.encounter_completed.character?.name || "Unbekannt";
+    const boss = entry.encounter_completed.encounter?.name || "Boss";
+
+    return `⚔️ ${name} hat ${boss} besiegt`;
+  }
+
+  return `📜 Aktivität: ${type}`;
 }
 
 export default async function handler(req, res) {
@@ -73,8 +63,10 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
- res.status(200).json(data.activities.slice(0, 3));
-return;
+    const activities = data.activities.slice(0, 10).map(entry => ({
+      description: buildDescription(entry),
+      time: timeAgo(entry.timestamp)
+    }));
 
     res.status(200).json({ activities });
 
