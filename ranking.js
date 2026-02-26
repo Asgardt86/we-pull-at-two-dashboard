@@ -10,17 +10,29 @@ async function loadRanking() {
     } else {
       html += `
         <div style="font-size:14px; line-height:1.8;">
-          🌍 World Rank: <strong>${data.world}</strong><br>
-          🇪🇺 EU Rank: <strong>${data.region}</strong><br>
-          🏰 Realm Rank: <strong>${data.realm}</strong>
+          🌍 World Rank:
+          <span style="color:var(--wow-gold); font-weight:600;">
+            ${data.world ?? "-"}
+          </span><br>
+
+          🇪🇺 EU Rank:
+          <span style="color:var(--wow-gold); font-weight:600;">
+            ${data.region ?? "-"}
+          </span><br>
+
+          🏰 Realm Rank:
+          <span style="color:var(--wow-gold); font-weight:600;">
+            ${data.realm ?? "-"}
+          </span>
         </div>
       `;
     }
 
     document.getElementById("ranking").innerHTML = html;
 
-  } catch (error) {
-    console.error("Ranking Fehler:", error);
+  } catch (err) {
+    document.getElementById("ranking").innerHTML =
+      `<h2>Raid Ranking</h2><p style="color:#ef4444;">Fehler beim Laden</p>`;
   }
 }
 
