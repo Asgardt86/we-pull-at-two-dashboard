@@ -1,53 +1,35 @@
-import { Buffer } from "buffer";
+/* ------------------ SERVER STATUS FRONTEND ------------------ */
 
-export default async function handler(req, res) {
+async function loadServerStatus() {
   try {
-    const clientId = process.env.BLIZZARD_CLIENT_ID;
-    const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
+    const res = await fetch("/api/server");
+    const data = await res.json();
 
-    const credentials = Buffer
-      .from(`${clientId}:${clientSecret}`)
-      .toString("base64");
+    const isOnline = data.status === "UP";
 
-    // OAuth Token holen
-    const tokenResponse = await fetch("https://oauth.battle.net/token", {
-      method: "POST",
-      headers: {
-        "Authorization": `Basic ${credentials}`,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: "grant_type=client_credentials"
-    });
+    const html = `
+      <div style="
+        margin-bottom:20px;
+        padding:14px 20px;
+        border-radius:14px;
+        background:rgba(30,41,59,0.7);
+        border:1px solid rgba(255,255,255,0.08);
+        box-shadow:0 5px 20px rgba(0,0,0,0.4);
+        text-align:center;
+        font-size:15px;
+      ">
+        🌍 Realm Status – ${data.name}: 
+        <strong style="color:${isOnline ? "#22c55e" : "#ef4444"};">
+          ${isOnline ? "Online" : "Offline"}
+        </strong>
+      </div>
+    `;
 
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    // Realm-Daten holen
-    const realmResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/blackrock?namespace=dynamic-eu&locale=de_DE",
-      {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }
-    );
-
-    // WICHTIG: prüfen ob Antwort OK
-    if (!realmResponse.ok) {
-      return res.status(realmResponse.status).json({
-        error: `Blizzard API Fehler: ${realmResponse.status}`
-      });
-    }
-
-    const realmData = await realmResponse.json();
-
-    // Status sicher auslesen
-    const statusType = realmData.status?.type || "UNKNOWN";
-
-    res.status(200).json({
-      name: realmData.name || "Blackrock",
-      status: statusType
-    });
+    document.getElementById("server-status").innerHTML = html;
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Server Status Fehler:", error);
   }
 }
+
+document.addEventListener("DOMContentLoaded", loadServerStatus);
