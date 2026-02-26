@@ -9,6 +9,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
+    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -21,6 +22,7 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
+    // Guild Basisdaten holen
     const guildResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two?namespace=profile-eu&locale=de_DE",
       {
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
 
     const guildData = await guildResponse.json();
 
-    // Emblem Media holen
+    // Emblem Media holen (weißes Symbol)
     const emblemId = guildData.crest.emblem.id;
 
     const emblemResponse = await fetch(
@@ -43,9 +45,19 @@ export default async function handler(req, res) {
     const emblemData = await emblemResponse.json();
     const emblemUrl = emblemData.assets[0].value;
 
+    // Saubere Daten zurückgeben
     res.status(200).json({
-      ...guildData,
-      emblemUrl
+      name: guildData.name,
+      realm: guildData.realm,
+      faction: guildData.faction,
+      member_count: guildData.member_count,
+      achievement_points: guildData.achievement_points,
+
+      emblemUrl,
+
+      emblemColor: guildData.crest.emblem.color.rgba,
+      borderColor: guildData.crest.border.color.rgba,
+      backgroundColor: guildData.crest.background.color.rgba
     });
 
   } catch (error) {
