@@ -1,19 +1,19 @@
 import { Buffer } from "buffer";
 
 const CLASS_MAP = {
-  1: "Krieger",
-  2: "Paladin",
-  3: "Jäger",
-  4: "Schurke",
-  5: "Priester",
-  6: "Todesritter",
-  7: "Schamane",
-  8: "Magier",
-  9: "Hexenmeister",
-  10: "Mönch",
-  11: "Druide",
-  12: "Dämonenjäger",
-  13: "Rufer"
+  1: { name: "Krieger", icon: "warrior", color: "#C79C6E" },
+  2: { name: "Paladin", icon: "paladin", color: "#F58CBA" },
+  3: { name: "Jäger", icon: "hunter", color: "#ABD473" },
+  4: { name: "Schurke", icon: "rogue", color: "#FFF569" },
+  5: { name: "Priester", icon: "priest", color: "#FFFFFF" },
+  6: { name: "Todesritter", icon: "deathknight", color: "#C41F3B" },
+  7: { name: "Schamane", icon: "shaman", color: "#0070DE" },
+  8: { name: "Magier", icon: "mage", color: "#69CCF0" },
+  9: { name: "Hexenmeister", icon: "warlock", color: "#9482C9" },
+  10:{ name: "Mönch", icon: "monk", color: "#00FF96" },
+  11:{ name: "Druide", icon: "druid", color: "#FF7D0A" },
+  12:{ name: "Dämonenjäger", icon: "demonhunter", color: "#A330C9" },
+  13:{ name: "Rufer", icon: "evoker", color: "#33937F" }
 };
 
 export default async function handler(req, res) {
@@ -47,22 +47,32 @@ export default async function handler(req, res) {
     const rosterData = await rosterResponse.json();
 
     const classCount = {};
-    const totalMembers = rosterData.members.length;
+    let totalLevel80 = 0;
 
     rosterData.members.forEach(member => {
-      const classId = member.character.playable_class.id;
-      const className = CLASS_MAP[classId] || "Unbekannt";
+      if (member.character.level !== 80) return; // 🔥 Nur Level 80
 
-      if (!classCount[className]) {
-        classCount[className] = 0;
+      const classId = member.character.playable_class.id;
+      const classInfo = CLASS_MAP[classId];
+
+      if (!classInfo) return;
+
+      if (!classCount[classId]) {
+        classCount[classId] = {
+          name: classInfo.name,
+          icon: classInfo.icon,
+          color: classInfo.color,
+          count: 0
+        };
       }
 
-      classCount[className]++;
+      classCount[classId].count++;
+      totalLevel80++;
     });
 
     res.status(200).json({
-      total: totalMembers,
-      classes: classCount
+      total: totalLevel80,
+      classes: Object.values(classCount)
     });
 
   } catch (error) {
