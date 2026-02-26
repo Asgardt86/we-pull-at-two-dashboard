@@ -6,29 +6,35 @@
 
 <title>We Pull at Two – Dashboard</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+
 <style>
 
 :root {
-  --wow-gold: green;
-  --wow-gold-soft: rgba(201,164,78,0.25);
+  --wow-gold: #d4af37;
+  --wow-gold-soft: rgba(212,175,55,0.15);
+  --wow-silver: #94a3b8;
+  --wow-panel: rgba(15,23,42,0.75);
+  --wow-panel-soft: rgba(15,23,42,0.55);
 }
 
 body {
   margin: 0;
   padding: 25px 20px;
-  background: #0f141b;
-  font-family: "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #111827, #0b0f16 70%);
+  font-family: 'Cinzel', serif;
   color: #e5e7eb;
   overflow-x: hidden;
 }
 
 h1 {
   text-align: center;
-  font-size: 22px;
-  margin-bottom: 25px;
-  font-weight: 500;
-  letter-spacing: 1px;
+  font-size: 24px;
+  margin-bottom: 30px;
+  font-weight: 700;
+  letter-spacing: 2px;
   color: var(--wow-gold);
+  text-shadow: 0 0 10px rgba(212,175,55,0.4);
 }
 
 /* TOP MODULE */
@@ -41,35 +47,54 @@ h1 {
 /* GRID */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 30px;
   align-items: start;
 }
 
 /* CARD */
 .card {
-  background: #161c24;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 16px;
-  transition: 0.2s ease;
+  background: var(--wow-panel);
+  border: 1px solid var(--wow-gold-soft);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow:
+    0 15px 40px rgba(0,0,0,0.7),
+    inset 0 0 25px rgba(212,175,55,0.03);
+  transition: all 0.3s ease;
 }
 
 .card:hover {
-  border-color: var(--wow-gold-soft);
-  box-shadow: 0 0 12px var(--wow-gold-soft);
+  border-color: var(--wow-gold);
+  box-shadow:
+    0 0 18px rgba(212,175,55,0.25),
+    0 15px 40px rgba(0,0,0,0.7);
 }
 
 .card h2 {
-  margin: 0 0 12px 0;
+  margin-top: 0;
+  margin-bottom: 18px;
   font-size: 15px;
-  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   color: var(--wow-gold);
+}
+
+/* SILBER STYLE für vergangene Raids */
+.legacy-section {
+  border: 1px solid rgba(148,163,184,0.2);
+  background: var(--wow-panel-soft);
+}
+
+.legacy-section h3 {
+  color: var(--wow-silver);
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 /* Guild kompakter */
 #guild p {
-  margin: 3px 0;
+  margin: 4px 0;
   font-size: 13px;
 }
 
