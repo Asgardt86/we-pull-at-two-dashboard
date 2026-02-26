@@ -21,18 +21,19 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    const realmResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/blackrock?namespace=dynamic-eu&locale=de_DE",
+    // RICHTIGER STATUS ENDPOINT
+    const statusResponse = await fetch(
+      "https://eu.api.blizzard.com/data/wow/realm/blackrock/status?namespace=dynamic-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const realmData = await realmResponse.json();
+    const statusData = await statusResponse.json();
 
     res.status(200).json({
-      name: realmData.name,
-      status: realmData.status.type
+      name: "Blackrock",
+      status: statusData.status.type
     });
 
   } catch (error) {
