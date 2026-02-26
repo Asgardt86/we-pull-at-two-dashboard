@@ -1,13 +1,21 @@
-/* ------------------ CLASS DISTRIBUTION ------------------ */
+/* ------------------ CLASS DISTRIBUTION WOW STYLE ------------------ */
 
-function renderClassBar(name, count, total) {
-  const percent = (count / total) * 100;
+function renderClassRow(classData, total) {
+  const percent = (classData.count / total) * 100;
+
+  const iconUrl = `https://render.worldofwarcraft.com/eu/icons/56/class_${classData.icon}.jpg`;
 
   return `
-    <div style="margin-bottom:10px;">
-      <div style="display:flex; justify-content:space-between; font-size:13px;">
-        <span>${name}</span>
-        <span>${count}</span>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; font-size:14px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="${iconUrl}" 
+               style="width:24px; height:24px; border-radius:4px;">
+          <span style="color:${classData.color}; font-weight:600;">
+            ${classData.name}
+          </span>
+        </div>
+        <span>${classData.count}</span>
       </div>
       <div style="
         width:100%;
@@ -15,11 +23,12 @@ function renderClassBar(name, count, total) {
         background:rgba(255,255,255,0.08);
         border-radius:6px;
         overflow:hidden;
+        margin-top:4px;
       ">
         <div style="
           width:${percent}%;
           height:100%;
-          background:linear-gradient(90deg,#60a5fa,#2563eb);
+          background:${classData.color};
         "></div>
       </div>
     </div>
@@ -31,15 +40,12 @@ async function loadClasses() {
     const res = await fetch("/api/classes");
     const data = await res.json();
 
-    const entries = Object.entries(data.classes);
+    const sorted = data.classes.sort((a, b) => b.count - a.count);
 
-    // Sortieren nach Anzahl
-    entries.sort((a, b) => b[1] - a[1]);
+    let html = `<h2>Klassenverteilung (Level 80)</h2>`;
 
-    let html = `<h2>Klassenverteilung</h2>`;
-
-    entries.forEach(([className, count]) => {
-      html += renderClassBar(className, count, data.total);
+    sorted.forEach(classData => {
+      html += renderClassRow(classData, data.total);
     });
 
     document.getElementById("classes").innerHTML = html;
