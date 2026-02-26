@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 
 const RAIDS = {
-  "Der Leerenturm": 6,
+  "Die Leerenspitze": 6,
   "Der Traumriss": 1,
   "Marsch auf Quel'Danas": 2
 };
