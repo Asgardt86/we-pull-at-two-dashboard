@@ -1,4 +1,4 @@
-/* ------------------ WORLD EVENTS (HYBRID SYSTEM) ------------------ */
+/* ------------------ WORLD EVENTS (HYBRID SYSTEM FIXED) ------------------ */
 
 function getFirstSunday(year, month) {
   const date = new Date(year, month, 1);
@@ -24,9 +24,8 @@ function getDarkmoonEvents() {
   const events = [];
 
   for (let i = 0; i < 2; i++) {
-    const month = now.getMonth() + i;
-    const year = now.getFullYear();
-    const start = getFirstSunday(year, month);
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const start = getFirstSunday(date.getFullYear(), date.getMonth());
     const end = addDays(start, 6);
 
     events.push({
@@ -39,7 +38,6 @@ function getDarkmoonEvents() {
   return events;
 }
 
-/* FESTE EVENTS (automatisch berechnet) */
 function getFixedEvents(year) {
   return [
     {
@@ -55,8 +53,8 @@ function getFixedEvents(year) {
   ];
 }
 
-/* VARIABLE EVENTS – JÄHRLICH PFLEGEN */
-const VARIABLE_EVENTS_2026 = [
+/* VARIABLE EVENTS – 2026 */
+const VARIABLE_EVENTS = [
   {
     name: "Mondfest",
     start: new Date(2026, 1, 16),
@@ -77,7 +75,7 @@ function loadEvents() {
   const events = [
     ...getDarkmoonEvents(),
     ...getFixedEvents(year),
-    ...VARIABLE_EVENTS_2026
+    ...VARIABLE_EVENTS
   ];
 
   let html = `
@@ -91,12 +89,15 @@ function loadEvents() {
 
   events.forEach(event => {
 
-    if (event.start > maxFuture) return;
+    const isActive = now >= event.start && now <= event.end;
+    const startsSoon = event.start > now && event.start <= maxFuture;
+
+    if (!isActive && !startsSoon) return;
 
     let status = "";
     let color = "#3b82f6";
 
-    if (now >= event.start && now <= event.end) {
+    if (isActive) {
       status = "AKTIV";
       color = "#22c55e";
     } else {
