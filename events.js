@@ -1,99 +1,60 @@
-const EVENT_IMAGES = {
-  "Dunkelmond-Jahrmarkt":
-    "https://wow.zamimg.com/uploads/screenshots/normal/944695-darkmoon-faire.jpg",
-  "Mondfest":
-    "https://wow.zamimg.com/uploads/screenshots/normal/908610-lunar-festival.jpg",
-  "Noblegarten":
-    "https://wow.zamimg.com/uploads/screenshots/normal/1000885-noblegarden.jpg",
-  "Winterhauchfest":
-    "https://wow.zamimg.com/uploads/screenshots/normal/820353-feast-of-winter-veil.jpg"
-};
+export default function handler(req, res) {
 
-async function loadEvents() {
-  const res = await fetch("/api/events");
-  const events = await res.json();
+  const now = new Date();
+  const year = now.getFullYear();
 
-  const container = document.getElementById("event-bar");
+  function createEvent(name, start, end) {
 
-  if (!events || events.length === 0) {
-    container.innerHTML = "";
-    return;
+    const isActive = now >= start && now <= end;
+    const diff = start - now;
+
+    let countdown = "";
+
+    if (!isActive) {
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      countdown = `Startet in ${days} Tagen`;
+    }
+
+    return {
+      name,
+      active: isActive,
+      countdown,
+      start
+    };
   }
 
-  // Aktives Event zuerst
-  const active = events.find(e => e.active);
-  const upcoming = events.filter(e => !e.active).slice(0, 2);
+  const events = [
 
-  let html = `
-    <div style="
-      display:grid;
-      grid-template-columns: ${active ? "2fr 1fr 1fr" : "1fr 1fr 1fr"};
-      gap:20px;
-    ">
-  `;
+    createEvent(
+      "Dunkelmond-Jahrmarkt",
+      new Date(year, now.getMonth() + 1, 1),
+      new Date(year, now.getMonth() + 1, 7)
+    ),
 
-  function renderEvent(event, large = false) {
-    const image = EVENT_IMAGES[event.name] || 
-      "https://wow.zamimg.com/uploads/screenshots/normal/928382-world-of-warcraft-shadowlands.jpg";
+    createEvent(
+      "Mondfest",
+      new Date(year, 1, 16),
+      new Date(year, 2, 2)
+    ),
 
-    return `
-      <div style="
-        position:relative;
-        border-radius:16px;
-        overflow:hidden;
-        height:${large ? "180px" : "140px"};
-        background-image:url('${image}');
-        background-size:cover;
-        background-position:center;
-        box-shadow:0 10px 30px rgba(0,0,0,0.6);
-      ">
+    createEvent(
+      "Noblegarten",
+      new Date(year, 3, 1),
+      new Date(year, 3, 7)
+    ),
 
-        <div style="
-          position:absolute;
-          inset:0;
-          background:linear-gradient(
-            to top,
-            rgba(0,0,0,0.85),
-            rgba(0,0,0,0.4)
-          );
-          display:flex;
-          flex-direction:column;
-          justify-content:flex-end;
-          padding:18px;
-        ">
+    createEvent(
+      "Winterhauchfest",
+      new Date(year, 11, 16),
+      new Date(year, 11, 31)
+    )
 
-          <div style="
-            font-weight:bold;
-            font-size:${large ? "18px" : "14px"};
-            color:#d4af37;
-            margin-bottom:6px;
-          ">
-            ${event.name}
-          </div>
+  ];
 
-          <div style="
-            font-size:12px;
-            color:#e5e7eb;
-          ">
-            ${event.active ? "Aktiv" : event.countdown}
-          </div>
+  // Nur Events innerhalb 60 Tage oder aktiv
+  const filtered = events
+    .filter(e => e.active || (e.start - now) < 60 * 24 * 60 * 60 * 1000)
+    .sort((a, b) => a.start - b.start);
 
-        </div>
-      </div>
-    `;
-  }
-
-  if (active) {
-    html += renderEvent(active, true);
-  }
-
-  upcoming.forEach(e => {
-    html += renderEvent(e, false);
-  });
-
-  html += `</div>`;
-
-  container.innerHTML = html;
+  res.status(200).json(filtered);
 }
-
-document.addEventListener("DOMContentLoaded", loadEvents);
