@@ -29,14 +29,23 @@ export default async function handler(req, res) {
     );
 
     if (response.status === 404) {
+      // Noch kein Progress → Standardstruktur zurückgeben
       return res.status(200).json({
-        empty: true,
-        message: "Noch kein Raid-Progress vorhanden."
+        mythic: { completed: 0, total: 8 },
+        heroic: { completed: 0, total: 8 },
+        normal: { completed: 0, total: 8 },
+        empty: true
       });
     }
 
     const data = await response.json();
-    res.status(200).json(data);
+
+    // Hier später echte Werte aus data extrahieren
+    return res.status(200).json({
+      mythic: { completed: 0, total: 8 },
+      heroic: { completed: 0, total: 8 },
+      normal: { completed: 0, total: 8 }
+    });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
