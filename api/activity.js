@@ -1,5 +1,21 @@
 import { Buffer } from "buffer";
 
+const CLASS_COLORS = {
+  1: "#C79C6E",
+  2: "#F58CBA",
+  3: "#ABD473",
+  4: "#FFF569",
+  5: "#FFFFFF",
+  6: "#C41F3B",
+  7: "#0070DE",
+  8: "#69CCF0",
+  9: "#9482C9",
+  10:"#00FF96",
+  11:"#FF7D0A",
+  12:"#A330C9",
+  13:"#33937F"
+};
+
 function timeAgo(timestamp) {
   const now = Date.now();
   const diff = now - timestamp;
@@ -13,24 +29,16 @@ function timeAgo(timestamp) {
   return `vor ${days} Tagen`;
 }
 
-function buildDescription(entry) {
-  const type = entry.activity?.type;
+async function getCharacterClass(accessToken, name) {
+  const response = await fetch(
+    `https://eu.api.blizzard.com/profile/wow/character/blackrock/${name.toLowerCase()}?namespace=profile-eu&locale=de_DE`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }
+  );
 
-  if (type === "CHARACTER_ACHIEVEMENT" && entry.character_achievement) {
-    const name = entry.character_achievement.character.name;
-    const achievement = entry.character_achievement.achievement.name;
-
-    return `🏆 ${name} hat den Erfolg "${achievement}" erhalten`;
-  }
-
-  if (type === "ENCOUNTER" && entry.encounter_completed) {
-    const name = entry.encounter_completed.character?.name || "Unbekannt";
-    const boss = entry.encounter_completed.encounter?.name || "Boss";
-
-    return `⚔️ ${name} hat ${boss} besiegt`;
-  }
-
-  return `📜 Aktivität: ${type}`;
+  const data = await response.json();
+  return data.character_class?.id;
 }
 
 export default async function handler(req, res) {
@@ -63,10 +71,31 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const activities = data.activities.slice(0, 10).map(entry => ({
-      description: buildDescription(entry),
-      time: timeAgo(entry.timestamp)
-    }));
+    const selected = data.activities.slice(0, 15);
+
+    const activities = await Promise.all(
+      selected.map(async entry => {
+
+        if (entry.activity?.type === "CHARACTER_ACHIEVEMENT") {
+
+          const name = entry.character_achievement.character.name;
+          const achievement = entry.character_achievement.achievement.name;
+
+          const classId = await getCharacterClass(accessToken, name);
+          const color = CLASS_COLORS[classId] || "#ffffff";
+
+          return {
+            description: `🏆 <span style="color:${color}; font-weight:600;">${name}</span> hat den Erfolg "${achievement}" erhalten`,
+            time: timeAgo(entry.timestamp)
+          };
+        }
+
+        return {
+          description: `📜 Aktivität: ${entry.activity?.type}`,
+          time: timeAgo(entry.timestamp)
+        };
+      })
+    );
 
     res.status(200).json({ activities });
 
