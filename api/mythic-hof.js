@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(
-      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members"
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members,mythic_plus_scores_by_season,mythic_plus_best_runs"
     );
 
     const data = await response.json();
@@ -35,14 +35,12 @@ export default async function handler(req, res) {
           bestRun: m.character.mythic_plus_best_runs?.[0] || null
         };
       })
-      // 🔥 Wenn Season existiert → danach sortieren
-      // sonst All-Time verwenden
+      .filter(p => p.seasonScore > 0 || p.allTimeScore > 0)
       .sort((a, b) => {
         const aScore = a.seasonScore > 0 ? a.seasonScore : a.allTimeScore;
         const bScore = b.seasonScore > 0 ? b.seasonScore : b.allTimeScore;
         return bScore - aScore;
       })
-      .filter(p => p.seasonScore > 0 || p.allTimeScore > 0)
       .slice(0, 10);
 
     const result = { players };
