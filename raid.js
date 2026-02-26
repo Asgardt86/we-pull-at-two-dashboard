@@ -1,45 +1,54 @@
-async function loadRaid() {
+let cache = { data: null, timestamp: 0 };
+const CACHE_TIME = 30 * 60 * 1000;
+
+// Midnight Season 1 Struktur
+const MIDNIGHT_RAIDS = [
+  { slug: "the-voidspire", name: "Die Leerenspitze", bosses: 6 },
+  { slug: "the-dreamrift", name: "Der Traumriss", bosses: 1 },
+  { slug: "march-on-queldanas", name: "Marsch auf Quel'Danas", bosses: 2 }
+];
+
+export default async function handler(req, res) {
   try {
-    const res = await fetch("/api/raid");
-    const data = await res.json();
 
-    let html = `<h2>Raid Progress – Midnight Season 1</h2>`;
-
-    if (!data.raids || data.raids.length === 0) {
-      html += `<p style="color:#9ca3af;">Noch kein Raid-Progress verfügbar</p>`;
-    } else {
-      data.raids.forEach(raid => {
-
-        const renderBar = (label, completed, total) => {
-          const percent = total === 0 ? 0 : (completed / total) * 100;
-
-          return `
-            <div style="margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; font-size:13px;">
-                <span>${label}</span>
-                <span>${completed} / ${total}</span>
-              </div>
-              <div style="width:100%; height:8px; background:rgba(255,255,255,0.08); border-radius:6px;">
-                <div style="width:${percent}%; height:100%; background:#22c55e;"></div>
-              </div>
-            </div>
-          `;
-        };
-
-        html += `
-          <div style="margin-top:15px; font-weight:bold;">${raid.name}</div>
-          ${renderBar("Mythic", raid.mythic.completed, raid.mythic.total)}
-          ${renderBar("Heroic", raid.heroic.completed, raid.heroic.total)}
-          ${renderBar("Normal", raid.normal.completed, raid.normal.total)}
-        `;
-      });
+    if (cache.data && Date.now() - cache.timestamp < CACHE_TIME) {
+      return res.status(200).json(cache.data);
     }
 
-    document.getElementById("raid").innerHTML = html;
+    const response = await fetch(
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=raid_progression"
+    );
 
-  } catch (err) {
-    console.error("Raid Fehler:", err);
+    const data = await response.json();
+    const progression = data.raid_progression || {};
+
+    const raids = MIDNIGHT_RAIDS.map(raid => {
+      const raidData = progression[raid.slug];
+
+      return {
+        name: raid.name,
+        mythic: {
+          completed: raidData?.mythic?.bosses_killed || 0,
+          total: raid.bosses
+        },
+        heroic: {
+          completed: raidData?.heroic?.bosses_killed || 0,
+          total: raid.bosses
+        },
+        normal: {
+          completed: raidData?.normal?.bosses_killed || 0,
+          total: raid.bosses
+        }
+      };
+    });
+
+    const result = { raids };
+
+    cache = { data: result, timestamp: Date.now() };
+
+    res.status(200).json(result);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }
-
-document.addEventListener("DOMContentLoaded", loadRaid);
