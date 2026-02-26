@@ -73,10 +73,8 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const activities = data.activities.slice(0, 10).map(entry => ({
-      description: buildDescription(entry),
-      time: timeAgo(entry.timestamp)
-    }));
+ res.status(200).json(data.activities.slice(0, 3));
+return;
 
     res.status(200).json({ activities });
 
