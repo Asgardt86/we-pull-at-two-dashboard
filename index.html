@@ -11,15 +11,15 @@
 :root {
   --wow-gold: #d4af37;
   --wow-gold-soft: rgba(212,175,55,0.15);
-  --wow-silver: #94a3b8;
+  --wow-silver: #cbd5e1;
   --wow-panel: rgba(15,23,42,0.75);
 }
 
 body {
   margin: 0;
   padding: 25px 20px;
-  background: radial-gradient(circle at top, #111827, #0b0f16 70%);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #0f141b;
+  font-family: Arial, sans-serif;
   color: #e5e7eb;
   overflow-x: hidden;
 }
@@ -27,7 +27,7 @@ body {
 h1 {
   text-align: center;
   font-size: 22px;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
   font-weight: 600;
   letter-spacing: 1px;
   color: var(--wow-gold);
@@ -43,7 +43,7 @@ h1 {
 /* GRID */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 30px;
   align-items: start;
 }
@@ -56,31 +56,24 @@ h1 {
   padding: 22px;
   box-shadow:
     0 10px 30px rgba(0,0,0,0.6),
-    inset 0 0 20px rgba(212,175,55,0.03);
-  transition: all 0.3s ease;
+    inset 0 0 20px rgba(255,215,0,0.03);
 }
 
-.card:hover {
-  border-color: var(--wow-gold);
-  box-shadow: 0 0 12px var(--wow-gold-soft);
-}
-
-/* TITLE STYLE */
 .card h2 {
-  display: inline-block;
   margin-top: 0;
   margin-bottom: 18px;
-  font-size: 15px;
+  font-size: 17px;
   letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--wow-gold);
+  display: inline-block;
   border-bottom: 2px solid var(--wow-gold);
   padding-bottom: 4px;
 }
 
 /* Guild kompakter */
 #guild p {
-  margin: 4px 0;
+  margin: 3px 0;
   font-size: 13px;
 }
 
@@ -109,33 +102,39 @@ h1 {
 
 <div class="grid">
 
+  <!-- 1️⃣ Gildenübersicht -->
   <div class="card" id="guild">
     <h2>Gildenübersicht</h2>
     <p>Lade Daten...</p>
   </div>
 
+  <!-- 2️⃣ Gilden Aktivität -->
+  <div class="card" id="activity">
+    <h2>Gilden Aktivität</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <!-- 3️⃣ Raid Progress -->
   <div class="card" id="raid">
     <h2>Raid Progress</h2>
     <p>Lade Daten...</p>
   </div>
 
+  <!-- 4️⃣ Raid Ranking -->
   <div class="card" id="ranking">
     <h2>Raid Ranking</h2>
     <p>Lade Daten...</p>
   </div>
 
+  <!-- 5️⃣ Mythic+ Ranking -->
   <div class="card" id="mythic">
     <h2>Mythic+ Ranking</h2>
     <p>Lade Daten...</p>
   </div>
 
+  <!-- 6️⃣ Klassenverteilung -->
   <div class="card" id="classes">
-    <h2>Klassenverteilung</h2>
-    <p>Lade Daten...</p>
-  </div>
-
-  <div class="card" id="activity">
-    <h2>Gilden Aktivität</h2>
+    <h2>Klassenverteilung (Level 80)</h2>
     <p>Lade Daten...</p>
   </div>
 
