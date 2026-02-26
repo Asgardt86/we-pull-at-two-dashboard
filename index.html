@@ -1,10 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>We Pull at Two Dashboard</title>
+<meta charset="UTF-8">
+<title>We Pull at Two Dashboard</title>
+<style>
+body {
+  background: #0f172a;
+  color: #facc15;
+  font-family: Arial;
+  margin: 0;
+  padding: 40px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #facc15;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.placeholder {
+  color: #94a3b8;
+}
+</style>
 </head>
-<body style="background:#111; color:gold; font-family:Arial; text-align:center; padding-top:50px;">
-  <h1>🔥 We Pull at Two</h1>
-  <p>Guild Dashboard is coming soon...</p>
+<body>
+
+<h1>🏰 We Pull at Two</h1>
+
+<div class="grid">
+
+  <div class="card" id="guild">
+    <h2>Gildenübersicht</h2>
+    <div>Lade Daten...</div>
+  </div>
+
+  <div class="card" id="raid">
+    <h2>🔥 Raid Progress</h2>
+    <div>Lade Daten...</div>
+  </div>
+
+  <div class="card" id="mythic">
+    <h2>🏆 Mythic+ Hall of Fame</h2>
+    <div>Lade Daten...</div>
+  </div>
+
+</div>
+
+<script>
+async function loadGuild() {
+  const res = await fetch("/api/guild");
+  const data = await res.json();
+
+  document.getElementById("guild").innerHTML = `
+    <h2>Gildenübersicht</h2>
+    <p><strong>Name:</strong> ${data.name}</p>
+    <p><strong>Realm:</strong> ${data.realm.name}</p>
+    <p><strong>Fraktion:</strong> ${data.faction.name}</p>
+    <p><strong>Mitglieder:</strong> ${data.member_count}</p>
+    <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
+  `;
+}
+
+async function loadRaid() {
+  const res = await fetch("/api/raid");
+  const data = await res.json();
+
+  if (data.empty) {
+    document.getElementById("raid").innerHTML = `
+      <h2>🔥 Raid Progress</h2>
+      <p class="placeholder">${data.message}</p>
+    `;
+    return;
+  }
+
+  document.getElementById("raid").innerHTML = `
+    <h2>🔥 Raid Progress</h2>
+    <p>Progress-Daten werden angezeigt sobald Bosse besiegt wurden.</p>
+  `;
+}
+
+async function loadMythic() {
+  const res = await fetch("/api/mythic");
+  const data = await res.json();
+
+  if (data.empty) {
+    document.getElementById("mythic").innerHTML = `
+      <h2>🏆 Mythic+ Hall of Fame</h2>
+      <p class="placeholder">${data.message}</p>
+    `;
+    return;
+  }
+}
+
+loadGuild();
+loadRaid();
+loadMythic();
+</script>
+
 </body>
 </html>
