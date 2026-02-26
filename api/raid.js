@@ -1,5 +1,11 @@
 import { Buffer } from "buffer";
 
+const RAIDS = {
+  "Der Leerenturm": 6,
+  "Der Traumriss": 1,
+  "Marsch auf Quel'Danas": 2
+};
+
 export default async function handler(req, res) {
   try {
     const clientId = process.env.BLIZZARD_CLIENT_ID;
@@ -28,24 +34,53 @@ export default async function handler(req, res) {
       }
     );
 
+    // Wenn noch kein Boss gekillt wurde
     if (response.status === 404) {
-      // Noch kein Progress → Standardstruktur zurückgeben
       return res.status(200).json({
-        mythic: { completed: 0, total: 8 },
-        heroic: { completed: 0, total: 8 },
-        normal: { completed: 0, total: 8 },
-        empty: true
+        empty: true,
+        raids: Object.entries(RAIDS).map(([name, total]) => ({
+          name,
+          mythic: { completed: 0, total },
+          heroic: { completed: 0, total },
+          normal: { completed: 0, total }
+        }))
       });
     }
 
     const data = await response.json();
 
-    // Hier später echte Werte aus data extrahieren
-    return res.status(200).json({
-      mythic: { completed: 0, total: 8 },
-      heroic: { completed: 0, total: 8 },
-      normal: { completed: 0, total: 8 }
+    const raidResults = Object.entries(RAIDS).map(([raidName, total]) => {
+      let mythic = 0;
+      let heroic = 0;
+      let normal = 0;
+
+      data.expansions?.forEach(exp => {
+        exp.instances?.forEach(instance => {
+          if (instance.name === raidName) {
+            instance.modes?.forEach(mode => {
+              if (mode.difficulty.type === "MYTHIC") {
+                mythic = mode.progress.completed_count;
+              }
+              if (mode.difficulty.type === "HEROIC") {
+                heroic = mode.progress.completed_count;
+              }
+              if (mode.difficulty.type === "NORMAL") {
+                normal = mode.progress.completed_count;
+              }
+            });
+          }
+        });
+      });
+
+      return {
+        name: raidName,
+        mythic: { completed: mythic, total },
+        heroic: { completed: heroic, total },
+        normal: { completed: normal, total }
+      };
     });
+
+    res.status(200).json({ raids: raidResults });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
