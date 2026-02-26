@@ -1,94 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>We Pull at Two – Dashboard</title>
+export default async function handler(req, res) {
+  try {
 
-<style>
-body {
-  margin: 0;
-  padding: 60px 40px;
-  background: radial-gradient(circle at top, #1b1f28, #0d1117 70%);
-  font-family: "Segoe UI", sans-serif;
-  color: #e5e7eb;
+    const response = await fetch(
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=mythic_plus_scores_by_season"
+    );
+
+    const data = await response.json();
+
+    // Prüfen ob Season-Daten existieren
+    if (!data.mythic_plus_scores_by_season || data.mythic_plus_scores_by_season.length === 0) {
+      return res.status(200).json({ empty: true });
+    }
+
+    // Neueste Season nehmen (erste im Array)
+    const season = data.mythic_plus_scores_by_season[0];
+
+    res.status(200).json({
+      score: season.scores?.all ?? null,
+      world: season.rankings?.world ?? null,
+      region: season.rankings?.region ?? null,
+      realm: season.rankings?.realm ?? null
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }
-
-h1 {
-  text-align: center;
-  font-size: 36px;
-  letter-spacing: 2px;
-  margin-bottom: 20px;
-  color: #d1d5db;
-  text-transform: uppercase;
-}
-
-#event-bar { margin-bottom: 20px; }
-#reset-container { margin-bottom: 20px; }
-#server-status { margin-bottom: 40px; }
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 30px;
-}
-
-.card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.card h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  font-size: 20px;
-  color: #f3f4f6;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding-bottom: 8px;
-}
-
-.placeholder {
-  color: #9ca3af;
-  font-style: italic;
-}
-</style>
-</head>
-
-<body>
-
-<h1>We Pull at Two – Live Guild Dashboard</h1>
-
-<div id="event-bar"></div>
-<div id="reset-container"></div>
-<div id="server-status"></div>
-
-<div class="grid">
-
-  <div class="card" id="guild"><h2>Gildenübersicht</h2></div>
-  <div class="card" id="raid"><h2>Raid Progress</h2></div>
-  <div class="card" id="ranking"><h2>Raid Ranking</h2></div>
-  <div class="card" id="mythic"><h2>Mythic+ Hall of Fame</h2></div>
-  <div class="card" id="classes"><h2>Klassenverteilung</h2></div>
-  <div class="card" id="activity"><h2>Gilden Aktivität</h2></div>
-
-</div>
-
-<script>
-loadGuild();
-loadRaid();
-</script>
-
-<script src="events.js"></script>
-<script src="reset.js"></script>
-<script src="server.js"></script>
-<script src="classes.js"></script>
-<script src="activity.js"></script>
-<script src="ranking.js"></script>
-
-</body>
-</html>
