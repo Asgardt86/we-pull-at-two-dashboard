@@ -41,7 +41,7 @@ async function loadRaid() {
     if (data.previous.length > 0) {
 
       html += `<hr style="margin:25px 0; opacity:0.2;">`;
-      html += `<h2>Frühere Raid Progress</h2>`;
+      html += `<h2>Raid Progress - Alt</h2>`;
 
       data.previous.forEach(raid => {
         html += `
