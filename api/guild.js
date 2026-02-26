@@ -21,15 +21,32 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    const response = await fetch(
+    const guildResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two?namespace=profile-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const data = await response.json();
-    res.status(200).json(data);
+    const guildData = await guildResponse.json();
+
+    // Emblem Media holen
+    const emblemId = guildData.crest.emblem.id;
+
+    const emblemResponse = await fetch(
+      `https://eu.api.blizzard.com/data/wow/media/guild-crest/emblem/${emblemId}?namespace=static-eu`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+
+    const emblemData = await emblemResponse.json();
+    const emblemUrl = emblemData.assets[0].value;
+
+    res.status(200).json({
+      ...guildData,
+      emblemUrl
+    });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
