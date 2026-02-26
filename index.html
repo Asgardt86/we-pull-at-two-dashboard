@@ -23,17 +23,9 @@ h1 {
 }
 
 /* TOP MODULES */
-#event-bar {
-  margin-bottom: 20px;
-}
-
-#reset-container {
-  margin-bottom: 20px;
-}
-
-#server-status {
-  margin-bottom: 40px;
-}
+#event-bar { margin-bottom: 20px; }
+#reset-container { margin-bottom: 20px; }
+#server-status { margin-bottom: 40px; }
 
 /* GRID */
 .grid {
@@ -60,10 +52,7 @@ h1 {
   padding-bottom: 8px;
 }
 
-/* PROGRESS BARS */
-.progress-row {
-  margin-bottom: 12px;
-}
+.progress-row { margin-bottom: 12px; }
 
 .progress-label {
   display: flex;
@@ -130,6 +119,12 @@ h1 {
     <p class="placeholder">
       Neue Mythic+ Season startet bald.
     </p>
+  </div>
+
+  <!-- CLASSES -->
+  <div class="card" id="classes">
+    <h2>Klassenverteilung</h2>
+    <p>Lade Daten...</p>
   </div>
 
 </div>
@@ -227,6 +222,7 @@ loadRaid();
 <script src="events.js"></script>
 <script src="reset.js"></script>
 <script src="server.js"></script>
+<script src="classes.js"></script>
 
 </body>
 </html>
