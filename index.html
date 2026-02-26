@@ -69,27 +69,48 @@ h1 {
 
 <div class="grid">
 
-  <div class="card" id="guild"><h2>Gildenübersicht</h2></div>
-  <div class="card" id="raid"><h2>Raid Progress</h2></div>
-  <div class="card" id="ranking"><h2>Raid Ranking</h2></div>
-  <div class="card" id="mythic"><h2>Mythic+ Ranking</h2></div>
-  <div class="card" id="classes"><h2>Klassenverteilung</h2></div>
-  <div class="card" id="activity"><h2>Gilden Aktivität</h2></div>
+  <div class="card" id="guild">
+    <h2>Gildenübersicht</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <div class="card" id="raid">
+    <h2>Raid Progress</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <div class="card" id="ranking">
+    <h2>Raid Ranking</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <div class="card" id="mythic">
+    <h2>Mythic+ Ranking</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <div class="card" id="classes">
+    <h2>Klassenverteilung</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <div class="card" id="activity">
+    <h2>Gilden Aktivität</h2>
+    <p>Lade Daten...</p>
+  </div>
 
 </div>
 
-<script>
-loadGuild();
-loadRaid();
-</script>
-
+<!-- MODULES -->
 <script src="events.js"></script>
 <script src="reset.js"></script>
 <script src="server.js"></script>
-<script src="classes.js"></script>
-<script src="activity.js"></script>
+<script src="guild.js"></script>
+<script src="raid.js"></script>
 <script src="ranking.js"></script>
 <script src="mythic-ranking.js"></script>
+<script src="classes.js"></script>
+<script src="activity.js"></script>
 
 </body>
 </html>
