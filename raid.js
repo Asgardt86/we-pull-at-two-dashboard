@@ -1,4 +1,4 @@
-function renderBar(label, completed, total, color, glow) {
+function renderBar(label, completed, total, color, glow, muted = false) {
   const percent = total === 0 ? 0 : (completed / total) * 100;
 
   return `
@@ -6,30 +6,29 @@ function renderBar(label, completed, total, color, glow) {
       <div style="
         display:flex;
         justify-content:space-between;
-        font-size:13px;
+        font-size:12px;
         margin-bottom:6px;
         letter-spacing:0.5px;
         text-transform:uppercase;
-        opacity:0.85;
+        opacity:${muted ? "0.6" : "0.85"};
       ">
         <span>${label}</span>
         <span>${completed} / ${total}</span>
       </div>
       <div style="
         width:100%;
-        height:10px;
+        height:8px;
         background:rgba(0,0,0,0.6);
-        border:1px solid rgba(255,215,0,0.15);
+        border:1px solid ${muted ? "rgba(192,192,192,0.2)" : "rgba(255,215,0,0.15)"};
         border-radius:8px;
         overflow:hidden;
-        box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
       ">
         <div style="
           height:100%;
           width:${percent}%;
-          background:linear-gradient(90deg, ${color}, ${glow});
+          background:${muted ? "#9ca3af" : `linear-gradient(90deg, ${color}, ${glow})`};
           border-radius:8px;
-          box-shadow:0 0 10px ${glow};
+          box-shadow:${muted ? "none" : `0 0 10px ${glow}`};
           transition:width 0.8s ease;
         "></div>
       </div>
@@ -37,25 +36,22 @@ function renderBar(label, completed, total, color, glow) {
   `;
 }
 
-function renderRaidPanel(title, raids) {
+function renderRaidPanel(title, raids, isCurrent = true) {
   let html = `
     <div style="
       background:rgba(10,15,25,0.6);
-      border:1px solid rgba(255,215,0,0.15);
+      border:1px solid ${isCurrent ? "rgba(255,215,0,0.15)" : "rgba(180,180,180,0.15)"};
       border-radius:14px;
       padding:20px;
       margin-bottom:30px;
-      box-shadow:
-        0 0 20px rgba(0,0,0,0.6),
-        inset 0 0 20px rgba(255,215,0,0.03);
     ">
       <h2 style="
         margin-top:0;
         margin-bottom:20px;
-        font-size:18px;
+        font-size:17px;
         letter-spacing:1px;
         text-transform:uppercase;
-        color:#d4af37;
+        color:${isCurrent ? "#d4af37" : "#cbd5e1"};
       ">
         ${title}
       </h2>
@@ -70,16 +66,15 @@ function renderRaidPanel(title, raids) {
 
     html += `
       <div style="
-        margin-bottom:28px;
-        padding-bottom:18px;
+        margin-bottom:22px;
+        padding-bottom:16px;
         border-bottom:1px solid rgba(255,255,255,0.05);
       ">
         <div style="
           font-weight:bold;
-          font-size:15px;
+          font-size:14px;
           margin-bottom:10px;
-          color:#f3f4f6;
-          letter-spacing:0.5px;
+          color:${isCurrent ? "#f3f4f6" : "#d1d5db"};
         ">
           ${raid.name}
         </div>
@@ -96,9 +91,9 @@ function renderRaidPanel(title, raids) {
         </div>
       `;
     } else {
-      html += renderBar("Mythic", raid.mythic.completed, raid.mythic.total, "#7c3aed", "#c084fc");
-      html += renderBar("Heroic", raid.heroic.completed, raid.heroic.total, "#ea580c", "#fb923c");
-      html += renderBar("Normal", raid.normal.completed, raid.normal.total, "#16a34a", "#4ade80");
+      html += renderBar("Mythic", raid.mythic.completed, raid.mythic.total, "#7c3aed", "#c084fc", !isCurrent);
+      html += renderBar("Heroic", raid.heroic.completed, raid.heroic.total, "#ea580c", "#fb923c", !isCurrent);
+      html += renderBar("Normal", raid.normal.completed, raid.normal.total, "#16a34a", "#4ade80", !isCurrent);
     }
 
     html += `</div>`;
@@ -115,10 +110,10 @@ async function loadRaid() {
 
     let html = "";
 
-    html += renderRaidPanel("Raid Progress – Aktuell", data.current);
+    html += renderRaidPanel("Raid Progress – Aktuell", data.current, true);
 
     if (data.previous.length > 0) {
-      html += renderRaidPanel("Frühere Raid Progress", data.previous);
+      html += renderRaidPanel("Frühere Raid Progress", data.previous, false);
     }
 
     document.getElementById("raid").innerHTML = html;
