@@ -9,6 +9,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
+    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -21,19 +22,29 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // RICHTIGER STATUS ENDPOINT
-    const statusResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/blackrock/status?namespace=dynamic-eu&locale=de_DE",
+    // Realm-Daten holen
+    const realmResponse = await fetch(
+      "https://eu.api.blizzard.com/data/wow/realm/blackrock?namespace=dynamic-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const statusData = await statusResponse.json();
+    // WICHTIG: prüfen ob Antwort OK
+    if (!realmResponse.ok) {
+      return res.status(realmResponse.status).json({
+        error: `Blizzard API Fehler: ${realmResponse.status}`
+      });
+    }
+
+    const realmData = await realmResponse.json();
+
+    // Status sicher auslesen
+    const statusType = realmData.status?.type || "UNKNOWN";
 
     res.status(200).json({
-      name: "Blackrock",
-      status: statusData.status.type
+      name: realmData.name || "Blackrock",
+      status: statusType
     });
 
   } catch (error) {
