@@ -13,6 +13,22 @@ function timeAgo(timestamp) {
   return `vor ${days} Tagen`;
 }
 
+function buildDescription(entry) {
+  const name = entry.character?.name || "Unbekannt";
+  const type = entry.activity?.type || "ACTIVITY";
+
+  switch (type) {
+    case "ACHIEVEMENT":
+      return `🏆 ${name} hat einen Erfolg erhalten`;
+    case "ENCOUNTER":
+      return `⚔️ ${name} hat einen Boss besiegt`;
+    case "LEVEL_UP":
+      return `🎯 ${name} hat eine neue Stufe erreicht`;
+    default:
+      return `📜 ${name} – ${type}`;
+  }
+}
+
 export default async function handler(req, res) {
   try {
     const clientId = process.env.BLIZZARD_CLIENT_ID;
@@ -43,9 +59,9 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const activities = data.activities.slice(0, 10).map(activity => ({
-      description: activity.description,
-      time: timeAgo(activity.timestamp)
+    const activities = data.activities.slice(0, 10).map(entry => ({
+      description: buildDescription(entry),
+      time: timeAgo(entry.timestamp)
     }));
 
     res.status(200).json({ activities });
