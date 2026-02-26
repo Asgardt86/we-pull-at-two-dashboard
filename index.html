@@ -100,14 +100,20 @@ async function loadGuild() {
   const res = await fetch("/api/guild");
   const data = await res.json();
 
-  document.getElementById("guild").innerHTML = `
-    <h2>Gildenübersicht</h2>
-    <p><strong>Name:</strong> ${data.name}</p>
-    <p><strong>Realm:</strong> ${data.realm.name}</p>
-    <p><strong>Fraktion:</strong> ${data.faction.name}</p>
-    <p><strong>Mitglieder:</strong> ${data.member_count}</p>
-    <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
-  `;
+document.getElementById("guild").innerHTML = `
+  <h2>Gildenübersicht</h2>
+  <div style="display:flex; align-items:center; gap:20px;">
+    <img src="${data.emblemUrl}" 
+         style="width:80px; height:80px; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.6);" />
+    <div>
+      <p><strong>Name:</strong> ${data.name}</p>
+      <p><strong>Realm:</strong> ${data.realm.name}</p>
+      <p><strong>Fraktion:</strong> ${data.faction.name}</p>
+      <p><strong>Mitglieder:</strong> ${data.member_count}</p>
+      <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
+    </div>
+  </div>
+`;
 }
 
 async function loadRaid() {
