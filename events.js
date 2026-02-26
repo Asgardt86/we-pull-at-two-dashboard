@@ -1,4 +1,4 @@
-/* ------------------ WORLD EVENTS (HYBRID SYSTEM PRO) ------------------ */
+/* ------------------ WORLD EVENTS (HYBRID SYSTEM FULL 2026) ------------------ */
 
 function getFirstSunday(year, month) {
   const date = new Date(year, month, 1);
@@ -63,20 +63,45 @@ function getFixedEvents(year) {
 /* VARIABLE EVENTS – 2026 */
 const VARIABLE_EVENTS = [
   {
+    name: "Liebe liegt in der Luft",
+    start: new Date(2026, 1, 9),
+    end: new Date(2026, 1, 23)
+  },
+  {
     name: "Mondfest",
     start: new Date(2026, 1, 16),
     end: new Date(2026, 2, 2)
   },
   {
-    name: "Liebe liegt in der Luft",
-    start: new Date(2026, 1, 9),
-    end: new Date(2026, 1, 23)
+    name: "Noblegarten",
+    start: new Date(2026, 3, 1),
+    end: new Date(2026, 3, 8)
+  },
+  {
+    name: "Sonnenwendfest",
+    start: new Date(2026, 5, 21),
+    end: new Date(2026, 6, 5)
+  },
+  {
+    name: "Braufest",
+    start: new Date(2026, 8, 20),
+    end: new Date(2026, 9, 6)
+  },
+  {
+    name: "Schlotternächte",
+    start: new Date(2026, 9, 18),
+    end: new Date(2026, 10, 1)
+  },
+  {
+    name: "Winterhauchfest",
+    start: new Date(2026, 11, 16),
+    end: new Date(2027, 0, 2)
   }
 ];
 
 function loadEvents() {
   const now = new Date();
-  const maxFuture = addDays(now, 60); // 60 Tage
+  const maxFuture = addDays(now, 60);
   const year = now.getFullYear();
 
   let events = [
@@ -85,14 +110,12 @@ function loadEvents() {
     ...VARIABLE_EVENTS
   ];
 
-  // Nur aktive oder kommende Events
   events = events.filter(event => {
     const isActive = now >= event.start && now <= event.end;
     const startsSoon = event.start > now && event.start <= maxFuture;
     return isActive || startsSoon;
   });
 
-  // Chronologisch sortieren
   events.sort((a, b) => a.start - b.start);
 
   let html = `
