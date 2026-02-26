@@ -29,18 +29,6 @@ function timeAgo(timestamp) {
   return `vor ${days} Tagen`;
 }
 
-async function getCharacterClass(accessToken, name) {
-  const response = await fetch(
-    `https://eu.api.blizzard.com/profile/wow/character/blackrock/${name.toLowerCase()}?namespace=profile-eu&locale=de_DE`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }
-  );
-
-  const data = await response.json();
-  return data.character_class?.id;
-}
-
 export default async function handler(req, res) {
   try {
     const clientId = process.env.BLIZZARD_CLIENT_ID;
@@ -50,6 +38,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
+    // OAuth
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -62,6 +51,24 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
+    // 🔥 Gilden-Roster laden (für Klassenfarben)
+    const rosterResponse = await fetch(
+      "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+
+    const rosterData = await rosterResponse.json();
+
+    // Name → Klassenfarbe Map
+    const classMap = {};
+    rosterData.members.forEach(member => {
+      classMap[member.character.name] =
+        CLASS_COLORS[member.character.playable_class.id] || "#ffffff";
+    });
+
+    // 🔥 Activity laden
     const response = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/activity?namespace=profile-eu&locale=de_DE",
       {
@@ -71,31 +78,26 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const selected = data.activities.slice(0, 15);
+    const activities = data.activities.slice(0, 15).map(entry => {
 
-    const activities = await Promise.all(
-      selected.map(async entry => {
+      if (entry.activity?.type === "CHARACTER_ACHIEVEMENT") {
 
-        if (entry.activity?.type === "CHARACTER_ACHIEVEMENT") {
+        const name = entry.character_achievement.character.name;
+        const achievement = entry.character_achievement.achievement.name;
 
-          const name = entry.character_achievement.character.name;
-          const achievement = entry.character_achievement.achievement.name;
-
-          const classId = await getCharacterClass(accessToken, name);
-          const color = CLASS_COLORS[classId] || "#ffffff";
-
-          return {
-            description: `🏆 <span style="color:${color}; font-weight:600;">${name}</span> hat den Erfolg "${achievement}" erhalten`,
-            time: timeAgo(entry.timestamp)
-          };
-        }
+        const color = classMap[name] || "#ffffff";
 
         return {
-          description: `📜 Aktivität: ${entry.activity?.type}`,
+          description: `🏆 <span style="color:${color}; font-weight:600;">${name}</span> hat den Erfolg "${achievement}" erhalten`,
           time: timeAgo(entry.timestamp)
         };
-      })
-    );
+      }
+
+      return {
+        description: `📜 Aktivität: ${entry.activity?.type}`,
+        time: timeAgo(entry.timestamp)
+      };
+    });
 
     res.status(200).json({ activities });
 
