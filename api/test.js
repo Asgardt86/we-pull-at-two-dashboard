@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // 1️⃣ Token holen
+    // Token holen
     const tokenResponse = await fetch("https://eu.battle.net/oauth/token", {
       method: "POST",
       headers: {
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2️⃣ Realm direkt abrufen (korrekter Endpoint)
+    // 🔥 Realm Index mit STATIC namespace
     const realmResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/blackrock?namespace=dynamic-eu&locale=de_DE",
+      "https://eu.api.blizzard.com/data/wow/realm/index?namespace=static-eu&locale=de_DE",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -32,12 +32,9 @@ export default async function handler(req, res) {
       }
     );
 
-    const text = await realmResponse.text();
+    const data = await realmResponse.json();
 
-    return res.status(200).json({
-      status: realmResponse.status,
-      response: text
-    });
+    return res.status(200).json(data);
 
   } catch (error) {
     return res.status(500).json({
