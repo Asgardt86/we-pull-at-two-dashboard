@@ -1,7 +1,6 @@
 let cache = { data: null, timestamp: 0 };
 const CACHE_TIME = 30 * 60 * 1000;
 
-// Midnight Season 1 Struktur
 const MIDNIGHT_RAIDS = [
   { slug: "the-voidspire", name: "Die Leerenspitze", bosses: 6 },
   { slug: "the-dreamrift", name: "Der Traumriss", bosses: 1 },
@@ -22,10 +21,14 @@ export default async function handler(req, res) {
     const data = await response.json();
     const progression = data.raid_progression || {};
 
-    const raids = MIDNIGHT_RAIDS.map(raid => {
+    const current = [];
+    const previous = [];
+
+    // 🟢 Aktuelle Midnight Raids
+    MIDNIGHT_RAIDS.forEach(raid => {
       const raidData = progression[raid.slug];
 
-      return {
+      current.push({
         name: raid.name,
         mythic: {
           completed: raidData?.mythic?.bosses_killed || 0,
@@ -39,10 +42,31 @@ export default async function handler(req, res) {
           completed: raidData?.normal?.bosses_killed || 0,
           total: raid.bosses
         }
-      };
+      });
     });
 
-    const result = { raids };
+    // 🔵 Frühere Raids (nur wenn Kills vorhanden)
+    Object.entries(progression).forEach(([slug, raidData]) => {
+
+      const isMidnight = MIDNIGHT_RAIDS.some(r => r.slug === slug);
+      if (isMidnight) return;
+
+      const mythic = raidData.mythic_bosses_killed || 0;
+      const heroic = raidData.heroic_bosses_killed || 0;
+      const normal = raidData.normal_bosses_killed || 0;
+
+      if (mythic === 0 && heroic === 0 && normal === 0) return;
+
+      previous.push({
+        name: slug.replace(/-/g, " "),
+        mythic: { completed: mythic, total: raidData.total_bosses },
+        heroic: { completed: heroic, total: raidData.total_bosses },
+        normal: { completed: normal, total: raidData.total_bosses }
+      });
+
+    });
+
+    const result = { current, previous };
 
     cache = { data: result, timestamp: Date.now() };
 
