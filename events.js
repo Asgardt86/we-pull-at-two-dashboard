@@ -1,173 +1,99 @@
-/* ------------------ WORLD EVENTS (HYBRID SYSTEM FULL 2026) ------------------ */
+const EVENT_IMAGES = {
+  "Dunkelmond-Jahrmarkt":
+    "https://wow.zamimg.com/uploads/screenshots/normal/944695-darkmoon-faire.jpg",
+  "Mondfest":
+    "https://wow.zamimg.com/uploads/screenshots/normal/908610-lunar-festival.jpg",
+  "Noblegarten":
+    "https://wow.zamimg.com/uploads/screenshots/normal/1000885-noblegarden.jpg",
+  "Winterhauchfest":
+    "https://wow.zamimg.com/uploads/screenshots/normal/820353-feast-of-winter-veil.jpg"
+};
 
-function getFirstSunday(year, month) {
-  const date = new Date(year, month, 1);
-  while (date.getDay() !== 0) {
-    date.setDate(date.getDate() + 1);
-  }
-  return date;
-}
+async function loadEvents() {
+  const res = await fetch("/api/events");
+  const events = await res.json();
 
-function addDays(date, days) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
+  const container = document.getElementById("event-bar");
 
-function daysBetween(date1, date2) {
-  const diff = date2 - date1;
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-function formatDate(date) {
-  return date.toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit"
-  });
-}
-
-function getDarkmoonEvents() {
-  const now = new Date();
-  const events = [];
-
-  for (let i = 0; i < 3; i++) {
-    const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-    const start = getFirstSunday(date.getFullYear(), date.getMonth());
-    const end = addDays(start, 6);
-
-    events.push({
-      name: "Dunkelmondjahrmarkt",
-      start,
-      end
-    });
+  if (!events || events.length === 0) {
+    container.innerHTML = "";
+    return;
   }
 
-  return events;
-}
-
-function getFixedEvents(year) {
-  return [
-    {
-      name: "Piratentag",
-      start: new Date(year, 8, 19),
-      end: new Date(year, 8, 19)
-    },
-    {
-      name: "Tag der Toten",
-      start: new Date(year, 10, 1),
-      end: new Date(year, 10, 3)
-    }
-  ];
-}
-
-/* VARIABLE EVENTS – 2026 */
-const VARIABLE_EVENTS = [
-  {
-    name: "Liebe liegt in der Luft",
-    start: new Date(2026, 1, 9),
-    end: new Date(2026, 1, 23)
-  },
-  {
-    name: "Mondfest",
-    start: new Date(2026, 1, 16),
-    end: new Date(2026, 2, 2)
-  },
-  {
-    name: "Noblegarten",
-    start: new Date(2026, 3, 1),
-    end: new Date(2026, 3, 8)
-  },
-  {
-    name: "Sonnenwendfest",
-    start: new Date(2026, 5, 21),
-    end: new Date(2026, 6, 5)
-  },
-  {
-    name: "Braufest",
-    start: new Date(2026, 8, 20),
-    end: new Date(2026, 9, 6)
-  },
-  {
-    name: "Schlotternächte",
-    start: new Date(2026, 9, 18),
-    end: new Date(2026, 10, 1)
-  },
-  {
-    name: "Winterhauchfest",
-    start: new Date(2026, 11, 16),
-    end: new Date(2027, 0, 2)
-  }
-];
-
-function loadEvents() {
-  const now = new Date();
-  const maxFuture = addDays(now, 30);
-  const year = now.getFullYear();
-
-  let events = [
-    ...getDarkmoonEvents(),
-    ...getFixedEvents(year),
-    ...VARIABLE_EVENTS
-  ];
-
-  events = events.filter(event => {
-    const isActive = now >= event.start && now <= event.end;
-    const startsSoon = event.start > now && event.start <= maxFuture;
-    return isActive || startsSoon;
-  });
-
-  events.sort((a, b) => a.start - b.start);
+  // Aktives Event zuerst
+  const active = events.find(e => e.active);
+  const upcoming = events.filter(e => !e.active).slice(0, 2);
 
   let html = `
     <div style="
-      display:flex;
-      gap:12px;
-      overflow-x:auto;
-      padding-bottom:10px;
+      display:grid;
+      grid-template-columns: ${active ? "2fr 1fr 1fr" : "1fr 1fr 1fr"};
+      gap:20px;
     ">
   `;
 
-  events.forEach(event => {
+  function renderEvent(event, large = false) {
+    const image = EVENT_IMAGES[event.name] || 
+      "https://wow.zamimg.com/uploads/screenshots/normal/928382-world-of-warcraft-shadowlands.jpg";
 
-    const isActive = now >= event.start && now <= event.end;
-
-    let status = "";
-    let color = "#3b82f6";
-
-    if (isActive) {
-      status = "AKTIV";
-      color = "#22c55e";
-    } else {
-      const days = daysBetween(now, event.start);
-      status = `Startet in ${days} Tagen`;
-      color = "#facc15";
-    }
-
-    html += `
+    return `
       <div style="
-        min-width:240px;
-        padding:14px 18px;
-        border-radius:12px;
-        background:rgba(30,41,59,0.85);
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 5px 20px rgba(0,0,0,0.4);
+        position:relative;
+        border-radius:16px;
+        overflow:hidden;
+        height:${large ? "180px" : "140px"};
+        background-image:url('${image}');
+        background-size:cover;
+        background-position:center;
+        box-shadow:0 10px 30px rgba(0,0,0,0.6);
       ">
-        <div style="font-weight:bold; margin-bottom:6px;">
-          ${event.name}
-        </div>
-        <div style="font-size:12px; color:#9ca3af; margin-bottom:6px;">
-          ${formatDate(event.start)} – ${formatDate(event.end)}
-        </div>
-        <div style="color:${color}; font-size:13px;">
-          ${status}
+
+        <div style="
+          position:absolute;
+          inset:0;
+          background:linear-gradient(
+            to top,
+            rgba(0,0,0,0.85),
+            rgba(0,0,0,0.4)
+          );
+          display:flex;
+          flex-direction:column;
+          justify-content:flex-end;
+          padding:18px;
+        ">
+
+          <div style="
+            font-weight:bold;
+            font-size:${large ? "18px" : "14px"};
+            color:#d4af37;
+            margin-bottom:6px;
+          ">
+            ${event.name}
+          </div>
+
+          <div style="
+            font-size:12px;
+            color:#e5e7eb;
+          ">
+            ${event.active ? "Aktiv" : event.countdown}
+          </div>
+
         </div>
       </div>
     `;
+  }
+
+  if (active) {
+    html += renderEvent(active, true);
+  }
+
+  upcoming.forEach(e => {
+    html += renderEvent(e, false);
   });
 
-  html += "</div>";
+  html += `</div>`;
 
-  document.getElementById("event-bar").innerHTML = html;
+  container.innerHTML = html;
 }
 
 document.addEventListener("DOMContentLoaded", loadEvents);
