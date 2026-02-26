@@ -61,12 +61,6 @@ h1 {
   color: #9ca3af;
   font-style: italic;
 }
-
-.section-divider {
-  margin: 80px 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #374151, transparent);
-}
 </style>
 </head>
 
@@ -93,27 +87,37 @@ h1 {
 
 </div>
 
-<div class="section-divider"></div>
-
 <script>
 async function loadGuild() {
   const res = await fetch("/api/guild");
   const data = await res.json();
 
-document.getElementById("guild").innerHTML = `
-  <h2>Gildenübersicht</h2>
-  <div style="display:flex; align-items:center; gap:20px;">
-    <img src="${data.emblemUrl}" 
-         style="width:80px; height:80px; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.6);" />
-    <div>
-      <p><strong>Name:</strong> ${data.name}</p>
-      <p><strong>Realm:</strong> ${data.realm.name}</p>
-      <p><strong>Fraktion:</strong> ${data.faction.name}</p>
-      <p><strong>Mitglieder:</strong> ${data.member_count}</p>
-      <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
+  document.getElementById("guild").innerHTML = `
+    <h2>Gildenübersicht</h2>
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div style="
+        width:90px;
+        height:90px;
+        border-radius:14px;
+        background: rgba(${data.backgroundColor.r}, ${data.backgroundColor.g}, ${data.backgroundColor.b}, 1);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:0 0 20px rgba(0,0,0,0.6);
+      ">
+        <img src="${data.emblemUrl}" 
+             style="width:60px; height:60px;">
+      </div>
+
+      <div>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Realm:</strong> ${data.realm.name}</p>
+        <p><strong>Fraktion:</strong> ${data.faction.name}</p>
+        <p><strong>Mitglieder:</strong> ${data.member_count}</p>
+        <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
+      </div>
     </div>
-  </div>
-`;
+  `;
 }
 
 async function loadRaid() {
@@ -127,11 +131,6 @@ async function loadRaid() {
     `;
     return;
   }
-
-  document.getElementById("raid").innerHTML = `
-    <h2>Raid Progress</h2>
-    <p>Progress wird automatisch angezeigt sobald Bosse besiegt wurden.</p>
-  `;
 }
 
 async function loadMythic() {
