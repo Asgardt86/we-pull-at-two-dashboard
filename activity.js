@@ -52,11 +52,11 @@ async function loadActivity() {
             font-weight:600;
             color:var(--wow-silver);
             margin-bottom:10px;
-            font-size:14px;
+            font-size:16px;
             border-bottom:1px solid rgba(203,213,225,0.25);
             padding-bottom:6px;
           ">
-            Gildenerfolge
+            Letzte Gildenerfolge
           </div>
       `;
 
