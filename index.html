@@ -24,7 +24,7 @@ h1 {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 30px;
 }
 
@@ -37,15 +37,25 @@ h1 {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #f3f4f6;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 8px;
+}
+
+/* Progress Bars */
 .progress-row {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .progress-label {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .progress-bar {
@@ -64,11 +74,16 @@ h1 {
 }
 
 .raid-title {
-  margin-top: 20px;
-  margin-bottom: 10px;
-  font-size: 15px;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  font-size: 14px;
   font-weight: bold;
   color: #cbd5e1;
+}
+
+.placeholder {
+  color: #9ca3af;
+  font-style: italic;
 }
 </style>
 </head>
@@ -79,14 +94,76 @@ h1 {
 
 <div class="grid">
 
+  <!-- GUILD -->
+  <div class="card" id="guild">
+    <h2>Gildenübersicht</h2>
+    <p>Lade Daten...</p>
+  </div>
+
+  <!-- RAID -->
   <div class="card" id="raid">
     <h2>Raid Progress – Midnight Season 1</h2>
     <p>Lade Daten...</p>
   </div>
 
+  <!-- MYTHIC -->
+  <div class="card" id="mythic">
+    <h2>Mythic+ Hall of Fame</h2>
+    <p class="placeholder">
+      Neue Mythic+ Season startet bald.
+    </p>
+  </div>
+
 </div>
 
 <script>
+
+/* ---------- GUILD ---------- */
+
+async function loadGuild() {
+  const res = await fetch("/api/guild");
+  const data = await res.json();
+
+  document.getElementById("guild").innerHTML = `
+    <h2>Gildenübersicht</h2>
+    <div style="display:flex; align-items:center; gap:20px;">
+      
+      <div style="
+        width:70px;
+        height:70px;
+        border-radius:50%;
+        background: rgba(${data.backgroundColor.r}, ${data.backgroundColor.g}, ${data.backgroundColor.b}, 1);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:
+          0 0 15px rgba(0,0,0,0.6),
+          inset 0 0 10px rgba(0,0,0,0.5);
+      ">
+        <img src="${data.emblemUrl}" 
+             style="
+               width:52px;
+               height:52px;
+               filter:
+                 brightness(1.4)
+                 contrast(1.4)
+                 drop-shadow(0 0 4px rgba(0,0,0,0.8));
+             ">
+      </div>
+
+      <div>
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Realm:</strong> ${data.realm.name}</p>
+        <p><strong>Fraktion:</strong> ${data.faction.name}</p>
+        <p><strong>Mitglieder:</strong> ${data.member_count}</p>
+        <p><strong>Erfolgspunkte:</strong> ${data.achievement_points}</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- RAID ---------- */
+
 function renderProgress(label, completed, total) {
   const percent = total === 0 ? 0 : (completed / total) * 100;
 
@@ -121,7 +198,11 @@ async function loadRaid() {
   document.getElementById("raid").innerHTML = html;
 }
 
+/* ---------- INIT ---------- */
+
+loadGuild();
 loadRaid();
+
 </script>
 
 </body>
