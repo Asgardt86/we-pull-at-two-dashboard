@@ -9,8 +9,8 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // Token holen
-    const tokenResponse = await fetch("https://eu.battle.net/oauth/token", {
+    // 1️⃣ Token holen
+    const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
         "Authorization": `Basic ${credentials}`,
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 🔥 Realm Index mit STATIC namespace
-    const realmResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/index?namespace=static-eu&locale=de_DE",
+    // 2️⃣ Simpelster möglicher WoW Endpoint
+    const response = await fetch(
+      "https://eu.api.blizzard.com/data/wow/playable-class/index?namespace=static-eu&locale=de_DE",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -32,9 +32,12 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await realmResponse.json();
+    const text = await response.text();
 
-    return res.status(200).json(data);
+    return res.status(200).json({
+      status: response.status,
+      body: text
+    });
 
   } catch (error) {
     return res.status(500).json({
