@@ -40,6 +40,57 @@ h1 {
   margin-bottom: 15px;
 }
 
+/* HERO GUILD CARD */
+.hero-guild {
+  background: linear-gradient(145deg, rgba(15,23,42,0.95), rgba(10,15,25,0.95));
+  border: 1px solid var(--wow-gold-soft);
+  border-radius: 18px;
+  padding: 30px;
+  margin-bottom: 35px;
+  box-shadow:
+    0 15px 40px rgba(0,0,0,0.7),
+    0 0 20px rgba(212,175,55,0.1);
+}
+
+.hero-guild-content {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.guild-info h2 {
+  margin: 0 0 15px 0;
+  font-size: 24px;
+  color: var(--wow-gold);
+}
+
+.guild-info p {
+  margin: 5px 0;
+  font-size: 15px;
+}
+
+.guild-label {
+  color: var(--wow-gold);
+  font-weight: bold;
+}
+
+.guild-value {
+  color: var(--wow-silver);
+}
+
+.guild-emblem-wrapper {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 20px rgba(0,0,0,0.7),
+    0 0 15px rgba(212,175,55,0.3);
+}
+
 /* GRID */
 .grid {
   display: grid;
@@ -71,22 +122,11 @@ h1 {
   padding-bottom: 4px;
 }
 
-/* Guild kompakter */
-#guild p {
-  margin: 3px 0;
-  font-size: 13px;
-}
-
-/* Activity kleiner */
-#activity div {
-  font-size: 12px;
-}
-
 /* Mobile */
 @media (max-width: 600px) {
   body { padding: 15px 12px; }
   h1 { font-size: 18px; }
-  .card { padding: 14px; }
+  .hero-guild { padding: 20px; }
 }
 
 </style>
@@ -100,39 +140,44 @@ h1 {
 <div id="reset-container"></div>
 <div id="server-status"></div>
 
+<!-- HERO GILDENÜBERSICHT -->
+<div id="guild-hero" class="hero-guild">
+  <div class="hero-guild-content">
+    <div class="guild-emblem-wrapper" id="guild-emblem"></div>
+
+    <div class="guild-info">
+      <h2 id="guild-name">Lade Gilde...</h2>
+
+      <p><span class="guild-label">Realm:</span> <span class="guild-value" id="guild-realm"></span></p>
+      <p><span class="guild-label">Fraktion:</span> <span class="guild-value" id="guild-faction"></span></p>
+      <p><span class="guild-label">Mitglieder:</span> <span class="guild-value" id="guild-members"></span></p>
+      <p><span class="guild-label">Erfolgspunkte:</span> <span class="guild-value" id="guild-achievements"></span></p>
+    </div>
+  </div>
+</div>
+
 <div class="grid">
 
-  <!-- 1️⃣ Gildenübersicht -->
-  <div class="card" id="guild">
-    <h2>Gildenübersicht</h2>
-    <p>Lade Daten...</p>
-  </div>
-
-  <!-- 2️⃣ Gilden Aktivität -->
   <div class="card" id="activity">
     <h2>Gilden Aktivität</h2>
     <p>Lade Daten...</p>
   </div>
 
-  <!-- 3️⃣ Raid Progress -->
   <div class="card" id="raid">
     <h2>Raid Progress</h2>
     <p>Lade Daten...</p>
   </div>
 
-  <!-- 4️⃣ Raid Ranking -->
   <div class="card" id="ranking">
     <h2>Raid Ranking</h2>
     <p>Lade Daten...</p>
   </div>
 
-  <!-- 5️⃣ Mythic+ Ranking -->
   <div class="card" id="mythic">
     <h2>Mythic+ Ranking</h2>
     <p>Lade Daten...</p>
   </div>
 
-  <!-- 6️⃣ Klassenverteilung -->
   <div class="card" id="classes">
     <h2>Klassenverteilung (Level 80)</h2>
     <p>Lade Daten...</p>
@@ -149,6 +194,32 @@ h1 {
 <script src="mythic-ranking.js"></script>
 <script src="classes.js"></script>
 <script src="activity.js"></script>
+
+<script>
+async function loadGuildHero() {
+  const res = await fetch("/api/guild");
+  const data = await res.json();
+
+  document.getElementById("guild-name").textContent = data.name;
+  document.getElementById("guild-realm").textContent = data.realm.name;
+  document.getElementById("guild-faction").textContent = data.faction.name;
+  document.getElementById("guild-members").textContent = data.member_count;
+  document.getElementById("guild-achievements").textContent = data.achievement_points;
+
+  document.getElementById("guild-emblem").style.background =
+    `rgba(${data.backgroundColor.r}, ${data.backgroundColor.g}, ${data.backgroundColor.b}, 1)`;
+
+  document.getElementById("guild-emblem").innerHTML = `
+    <img src="${data.emblemUrl}" style="
+      width:70px;
+      height:70px;
+      filter:brightness(1.4) contrast(1.3) drop-shadow(0 0 6px rgba(0,0,0,0.8));
+    ">
+  `;
+}
+
+loadGuildHero();
+</script>
 
 </body>
 </html>
