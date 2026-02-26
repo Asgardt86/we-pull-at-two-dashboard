@@ -13,17 +13,31 @@ function timeAgo(timestamp) {
   return `vor ${days} Tagen`;
 }
 
+function getCharacterName(entry) {
+  return (
+    entry.character?.name ||
+    entry.activity?.character?.name ||
+    "Unbekannt"
+  );
+}
+
 function buildDescription(entry) {
-  const name = entry.character?.name || "Unbekannt";
+  const name = getCharacterName(entry);
   const type = entry.activity?.type || "ACTIVITY";
 
   switch (type) {
-    case "ACHIEVEMENT":
+    case "CHARACTER_ACHIEVEMENT":
       return `🏆 ${name} hat einen Erfolg erhalten`;
+
     case "ENCOUNTER":
       return `⚔️ ${name} hat einen Boss besiegt`;
+
     case "LEVEL_UP":
       return `🎯 ${name} hat eine neue Stufe erreicht`;
+
+    case "ITEM_LOOT":
+      return `📦 ${name} hat Beute erhalten`;
+
     default:
       return `📜 ${name} – ${type}`;
   }
@@ -41,7 +55,7 @@ export default async function handler(req, res) {
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: "grant_type=client_credentials"
