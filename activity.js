@@ -14,7 +14,19 @@ async function loadActivity() {
 
     if (activityData.activities && activityData.activities.length > 0) {
 
-      html += `<div style="margin-bottom:20px;">`;
+      html += `
+        <div style="margin-bottom:25px;">
+          <div style="
+            font-weight:600;
+            color:var(--wow-silver);
+            margin-bottom:10px;
+            font-size:14px;
+            border-bottom:1px solid rgba(203,213,225,0.25);
+            padding-bottom:6px;
+          ">
+            Charakter Aktivitäten
+          </div>
+      `;
 
       activityData.activities.slice(0,5).forEach(entry => {
         html += `
@@ -35,17 +47,16 @@ async function loadActivity() {
     if (guildAchData.achievements && guildAchData.achievements.length > 0) {
 
       html += `
-        <div style="
-          border-top:1px solid rgba(212,175,55,0.25);
-          padding-top:15px;
-        ">
+        <div>
           <div style="
             font-weight:600;
-            color:#d4af37;
+            color:var(--wow-silver);
             margin-bottom:10px;
             font-size:14px;
+            border-bottom:1px solid rgba(203,213,225,0.25);
+            padding-bottom:6px;
           ">
-            🛡 Letzte Gildenerfolge
+            Gildenerfolge
           </div>
       `;
 
@@ -55,8 +66,8 @@ async function loadActivity() {
         const formatted = date.toLocaleDateString("de-DE");
 
         html += `
-          <div style="margin-bottom:6px; font-size:13px;">
-            ${a.name}
+          <div style="margin-bottom:8px; font-size:13px;">
+            🛡 ${a.name}
             <div style="color:#9ca3af; font-size:11px;">
               ${formatted}
             </div>
