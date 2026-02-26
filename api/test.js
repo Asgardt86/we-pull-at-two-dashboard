@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // 1️⃣ Token holen
+    // Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -22,9 +22,9 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2️⃣ Simpelster möglicher WoW Endpoint
+    // 🔥 Guild Basisdaten
     const response = await fetch(
-      "https://eu.api.blizzard.com/data/wow/playable-class/index?namespace=static-eu&locale=de_DE",
+      "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two?namespace=profile-eu&locale=de_DE",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -40,8 +40,6 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    return res.status(500).json({
-      error: error.message
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
