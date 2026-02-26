@@ -1,5 +1,8 @@
 import { Buffer } from "buffer";
 
+let cache = { data: null, timestamp: 0 };
+const CACHE_TIME = 30 * 60 * 1000; // 30 Minuten
+
 const CLASS_MAP = {
   1: { name: "Krieger", icon: "warrior", color: "#C79C6E" },
   2: { name: "Paladin", icon: "paladin", color: "#F58CBA" },
@@ -18,6 +21,12 @@ const CLASS_MAP = {
 
 export default async function handler(req, res) {
   try {
+
+    // 🔥 Cache prüfen
+    if (cache.data && Date.now() - cache.timestamp < CACHE_TIME) {
+      return res.status(200).json(cache.data);
+    }
+
     const clientId = process.env.BLIZZARD_CLIENT_ID;
     const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
 
@@ -28,7 +37,7 @@ export default async function handler(req, res) {
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: "grant_type=client_credentials"
@@ -50,7 +59,7 @@ export default async function handler(req, res) {
     let totalLevel80 = 0;
 
     rosterData.members.forEach(member => {
-      if (member.character.level !== 80) return; // 🔥 Nur Level 80
+      if (member.character.level !== 80) return;
 
       const classId = member.character.playable_class.id;
       const classInfo = CLASS_MAP[classId];
@@ -70,10 +79,15 @@ export default async function handler(req, res) {
       totalLevel80++;
     });
 
-    res.status(200).json({
+    const result = {
       total: totalLevel80,
       classes: Object.values(classCount)
-    });
+    };
+
+    // 🔥 Cache speichern
+    cache = { data: result, timestamp: Date.now() };
+
+    res.status(200).json(result);
 
   } catch (error) {
     res.status(500).json({ error: error.message });
