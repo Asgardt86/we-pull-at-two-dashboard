@@ -19,20 +19,30 @@ export default async function handler(req, res) {
     }
 
     const players = data.members
-      .filter(m => m.character.mythic_plus_scores_by_season)
       .map(m => {
-        const season = m.character.mythic_plus_scores_by_season[0];
+
+        const season = m.character.mythic_plus_scores_by_season?.[0];
+
+        const seasonScore = season?.scores?.all || 0;
+        const allTimeScore = m.character.mythic_plus_scores?.all || 0;
 
         return {
           name: m.character.name,
           class: m.character.class,
           role: m.character.role,
-          seasonScore: season?.scores?.all || 0,
-          allTimeScore: m.character.mythic_plus_scores?.all || 0,
+          seasonScore,
+          allTimeScore,
           bestRun: m.character.mythic_plus_best_runs?.[0] || null
         };
       })
-      .sort((a, b) => b.seasonScore - a.seasonScore)
+      // 🔥 Wenn Season existiert → danach sortieren
+      // sonst All-Time verwenden
+      .sort((a, b) => {
+        const aScore = a.seasonScore > 0 ? a.seasonScore : a.allTimeScore;
+        const bScore = b.seasonScore > 0 ? b.seasonScore : b.allTimeScore;
+        return bScore - aScore;
+      })
+      .filter(p => p.seasonScore > 0 || p.allTimeScore > 0)
       .slice(0, 10);
 
     const result = { players };
