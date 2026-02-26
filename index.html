@@ -6,8 +6,6 @@
 
 <title>We Pull at Two – Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
-
 <style>
 
 :root {
@@ -15,26 +13,24 @@
   --wow-gold-soft: rgba(212,175,55,0.15);
   --wow-silver: #94a3b8;
   --wow-panel: rgba(15,23,42,0.75);
-  --wow-panel-soft: rgba(15,23,42,0.55);
 }
 
 body {
   margin: 0;
   padding: 25px 20px;
   background: radial-gradient(circle at top, #111827, #0b0f16 70%);
-  font-family: 'Cinzel', serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #e5e7eb;
   overflow-x: hidden;
 }
 
 h1 {
   text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   margin-bottom: 30px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  font-weight: 600;
+  letter-spacing: 1px;
   color: var(--wow-gold);
-  text-shadow: 0 0 10px rgba(212,175,55,0.4);
 }
 
 /* TOP MODULE */
@@ -56,40 +52,30 @@ h1 {
 .card {
   background: var(--wow-panel);
   border: 1px solid var(--wow-gold-soft);
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 22px;
   box-shadow:
-    0 15px 40px rgba(0,0,0,0.7),
-    inset 0 0 25px rgba(212,175,55,0.03);
+    0 10px 30px rgba(0,0,0,0.6),
+    inset 0 0 20px rgba(212,175,55,0.03);
   transition: all 0.3s ease;
 }
 
 .card:hover {
   border-color: var(--wow-gold);
-  box-shadow:
-    0 0 18px rgba(212,175,55,0.25),
-    0 15px 40px rgba(0,0,0,0.7);
+  box-shadow: 0 0 12px var(--wow-gold-soft);
 }
 
+/* TITLE STYLE */
 .card h2 {
+  display: inline-block;
   margin-top: 0;
   margin-bottom: 18px;
   font-size: 15px;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   color: var(--wow-gold);
-}
-
-/* SILBER STYLE für vergangene Raids */
-.legacy-section {
-  border: 1px solid rgba(148,163,184,0.2);
-  background: var(--wow-panel-soft);
-}
-
-.legacy-section h3 {
-  color: var(--wow-silver);
-  font-weight: 600;
-  letter-spacing: 1px;
+  border-bottom: 2px solid var(--wow-gold);
+  padding-bottom: 4px;
 }
 
 /* Guild kompakter */
