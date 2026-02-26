@@ -9,7 +9,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // OAuth Token holen
+    // OAuth Token
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Realm-Daten holen
+    // Realm abrufen
     const realmResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/realm/blackrock?namespace=dynamic-eu&locale=de_DE",
       {
@@ -30,20 +30,30 @@ export default async function handler(req, res) {
       }
     );
 
-    // WICHTIG: prüfen ob Antwort OK
-    if (!realmResponse.ok) {
-      return res.status(realmResponse.status).json({
-        error: `Blizzard API Fehler: ${realmResponse.status}`
-      });
-    }
-
     const realmData = await realmResponse.json();
 
-    // Status sicher auslesen
-    const statusType = realmData.status?.type || "UNKNOWN";
+    // Connected Realm URL
+    const connectedRealmUrl = realmData.connected_realm.href;
+
+    const connectedResponse = await fetch(connectedRealmUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const connectedData = await connectedResponse.json();
+
+    let statusType = "UNKNOWN";
+
+    if (connectedData.status?.type) {
+      statusType = connectedData.status.type;
+    } else if (connectedData.status?.name) {
+      statusType = connectedData.status.name.toUpperCase();
+    } else if (connectedData.has_queue !== undefined) {
+      // Wenn has_queue existiert, ist Realm online
+      statusType = "UP";
+    }
 
     res.status(200).json({
-      name: realmData.name || "Blackrock",
+      name: realmData.name,
       status: statusType
     });
 
