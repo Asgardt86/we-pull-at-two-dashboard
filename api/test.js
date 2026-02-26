@@ -9,7 +9,6 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // 1️⃣ Token holen
     const tokenResponse = await fetch("https://eu.battle.net/oauth/token", {
       method: "POST",
       headers: {
@@ -22,9 +21,9 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 2️⃣ Realm Index abrufen
-    const realmResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/realm/index?namespace=dynamic-eu&locale=de_DE",
+    // TEST: öffentlicher Charakter
+    const response = await fetch(
+      "https://eu.api.blizzard.com/profile/wow/character/blackrock/method?namespace=profile-eu&locale=de_DE",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`
@@ -32,13 +31,14 @@ export default async function handler(req, res) {
       }
     );
 
-    const realmData = await realmResponse.json();
+    const text = await response.text();
 
-    return res.status(200).json(realmData);
+    return res.status(200).json({
+      status: response.status,
+      data: text
+    });
 
   } catch (error) {
-    return res.status(500).json({
-      error: error.message
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
