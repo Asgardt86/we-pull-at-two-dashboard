@@ -56,10 +56,10 @@ export default async function handler(req, res) {
     const rosterData = await rosterResponse.json();
 
     const classCount = {};
-    let totalLevel90 = 0;
+    let totalLevel80plus = 0;
 
     rosterData.members.forEach(member => {
-      if (member.character.level !== 90) return;
+      if (member.character.level < 80) return; // Alles unter Level 80 ignorieren
 
       const classId = member.character.playable_class.id;
       const classInfo = CLASS_MAP[classId];
@@ -76,11 +76,11 @@ export default async function handler(req, res) {
       }
 
       classCount[classId].count++;
-      totalLevel90++;
+      totalLevel80plus++;
     });
 
     const result = {
-      total: totalLevel90,
+      total: totalLevel80plus,
       classes: Object.values(classCount)
     };
 
