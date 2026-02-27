@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${credentials}`,
+        Authorization: `Basic ${credentials}`,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: "grant_type=client_credentials"
@@ -29,29 +29,46 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    const response = await fetch(
+    const guildResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/achievements?namespace=profile-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const data = await response.json();
+    const guildData = await guildResponse.json();
 
-    if (!data.achievements) {
+    if (!guildData.achievements) {
       return res.status(200).json({ achievements: [] });
     }
 
-    const sorted = data.achievements
+    const latest = guildData.achievements
       .filter(a => a.completed_timestamp)
       .sort((a, b) => b.completed_timestamp - a.completed_timestamp)
-      .slice(0, 5)
-      .map(a => ({
-        name: a.achievement.name,
-        timestamp: a.completed_timestamp
-      }));
+      .slice(0, 5);
 
-    const result = { achievements: sorted };
+    const achievements = [];
+
+    for (const entry of latest) {
+
+      const detailResponse = await fetch(
+        `https://eu.api.blizzard.com/data/wow/achievement/${entry.achievement.id}?namespace=static-eu&locale=de_DE`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
+
+      if (!detailResponse.ok) continue;
+
+      const detailData = await detailResponse.json();
+
+      achievements.push({
+        name: detailData.name, // jetzt wirklich deutsch
+        timestamp: entry.completed_timestamp
+      });
+    }
+
+    const result = { achievements };
 
     cache = { data: result, timestamp: Date.now() };
 
