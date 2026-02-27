@@ -67,7 +67,7 @@ async function loadActivity() {
 
         html += `
           <div style="margin-bottom:8px; font-size:13px;">
-            🔥 ${a.name}
+            🏅 ${a.name}
             <div style="color:#9ca3af; font-size:11px;">
               ${formatted}
             </div>
