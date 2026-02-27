@@ -43,7 +43,7 @@ async function loadClasses() {
 
     const sorted = data.classes.sort((a, b) => b.count - a.count);
 
-    let html = `<h2>Klassenverteilung (Level 90)</h2>`;
+    let html = `<h2>Klassenverteilung (Level 80-90)</h2>`;
 
     sorted.forEach(classData => {
       html += renderClassRow(classData, data.total);
