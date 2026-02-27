@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // OAuth Token
+    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 1️⃣ Guild Roster holen
+    // Guild Roster
     const rosterResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
       {
@@ -41,18 +41,16 @@ export default async function handler(req, res) {
     const rosterData = await rosterResponse.json();
 
     if (!rosterData.members) {
-      return res.status(200).json({ empty: true });
+      return res.status(200).json({ players: [] });
     }
 
-    // Nur Level 80
-    const level80 = rosterData.members
-      .filter(m => m.character.level === 80)
-      .slice(0, 15); // Performance Limit
+    // 🔥 Nur Maxlevel 90
+    const maxLevelPlayers = rosterData.members
+      .filter(m => m.character.level === 90);
 
     const players = [];
 
-    for (const member of level80) {
-
+    for (const member of maxLevelPlayers) {
       try {
 
         const profileResponse = await fetch(
@@ -66,18 +64,15 @@ export default async function handler(req, res) {
 
         const profileData = await profileResponse.json();
 
-        const seasonScore = profileData.current_mythic_rating?.rating || 0;
-        const totalScore = profileData.season_best_runs
-          ? profileData.season_best_runs.reduce((sum, run) => sum + run.mythic_level, 0)
-          : 0;
+        const seasonScore =
+          profileData.current_mythic_rating?.rating || 0;
 
-        if (seasonScore === 0 && totalScore === 0) continue;
+        if (seasonScore === 0) continue;
 
         players.push({
           name: member.character.name,
           classId: member.character.playable_class.id,
-          seasonScore,
-          totalScore
+          seasonScore
         });
 
       } catch {
