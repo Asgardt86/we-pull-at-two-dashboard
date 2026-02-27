@@ -1,5 +1,8 @@
 import { Buffer } from "buffer";
 
+let cache = { data: null, timestamp: 0 };
+const CACHE_TIME = 5 * 60 * 1000; // 5 Minuten Cache
+
 const CLASS_COLORS = {
   1: "#C79C6E",
   2: "#F58CBA",
@@ -31,6 +34,12 @@ function timeAgo(timestamp) {
 
 export default async function handler(req, res) {
   try {
+
+    // Cache Check
+    if (cache.data && Date.now() - cache.timestamp < CACHE_TIME) {
+      return res.status(200).json(cache.data);
+    }
+
     const clientId = process.env.BLIZZARD_CLIENT_ID;
     const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
 
@@ -38,7 +47,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // OAuth
+    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -51,7 +60,7 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // 🔥 Gilden-Roster laden (für Klassenfarben)
+    // Roster holen (für Klassenfarben)
     const rosterResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
       {
@@ -61,30 +70,38 @@ export default async function handler(req, res) {
 
     const rosterData = await rosterResponse.json();
 
-    // Name → Klassenfarbe Map
     const classMap = {};
-    rosterData.members.forEach(member => {
-      classMap[member.character.name] =
-        CLASS_COLORS[member.character.playable_class.id] || "#ffffff";
-    });
+    if (rosterData.members) {
+      rosterData.members.forEach(member => {
+        classMap[member.character.name] =
+          CLASS_COLORS[member.character.playable_class.id] || "#ffffff";
+      });
+    }
 
-    // 🔥 Activity laden
-    const response = await fetch(
+    // Activity laden
+    const activityResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/activity?namespace=profile-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const data = await response.json();
+    const activityData = await activityResponse.json();
 
-    const activities = data.activities.slice(0, 15).map(entry => {
+    if (!activityData.activities) {
+      return res.status(200).json({ activities: [] });
+    }
 
-      if (entry.activity?.type === "CHARACTER_ACHIEVEMENT") {
+    // Erst 30 laden, dann filtern
+    const relevant = activityData.activities.slice(0, 30).map(entry => {
+
+      const type = entry.activity?.type;
+
+      // Character Achievement
+      if (type === "CHARACTER_ACHIEVEMENT" && entry.character_achievement) {
 
         const name = entry.character_achievement.character.name;
         const achievement = entry.character_achievement.achievement.name;
-
         const color = classMap[name] || "#ffffff";
 
         return {
@@ -93,13 +110,28 @@ export default async function handler(req, res) {
         };
       }
 
-      return {
-        description: `📜 Aktivität: ${entry.activity?.type}`,
-        time: timeAgo(entry.timestamp)
-      };
-    });
+      // Level Up
+      if (type === "PLAYER_LEVEL_UP" && entry.player_level_up) {
 
-    res.status(200).json({ activities });
+        const name = entry.player_level_up.character.name;
+        const level = entry.player_level_up.level;
+        const color = classMap[name] || "#ffffff";
+
+        return {
+          description: `⭐ <span style="color:${color}; font-weight:600;">${name}</span> hat Level ${level} erreicht`,
+          time: timeAgo(entry.timestamp)
+        };
+      }
+
+      return null;
+
+    }).filter(Boolean).slice(0, 15); // Max 15 anzeigen
+
+    const result = { activities: relevant };
+
+    cache = { data: result, timestamp: Date.now() };
+
+    res.status(200).json(result);
 
   } catch (error) {
     res.status(500).json({ error: error.message });
