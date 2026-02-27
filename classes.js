@@ -3,7 +3,8 @@
 function renderClassRow(classData, total) {
   const percent = (classData.count / total) * 100;
 
-  const iconUrl = `https://render.worldofwarcraft.com/eu/icons/56/class_${classData.icon}.jpg`;
+  // Stabileres CDN
+  const iconUrl = `https://wow.zamimg.com/images/wow/icons/medium/class_${classData.icon}.jpg`;
 
   return `
     <div style="margin-bottom:14px;">
@@ -42,7 +43,7 @@ async function loadClasses() {
 
     const sorted = data.classes.sort((a, b) => b.count - a.count);
 
-    let html = `<h2>Klassenverteilung (Level 80)</h2>`;
+    let html = `<h2>Klassenverteilung (Level 90)</h2>`;
 
     sorted.forEach(classData => {
       html += renderClassRow(classData, data.total);
