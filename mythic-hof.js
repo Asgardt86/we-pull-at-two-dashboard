@@ -37,29 +37,20 @@ async function loadMythicHOF() {
       else medal = `#${index + 1}`;
 
       const color = CLASS_COLORS[player.classId] || "#ffffff";
-
-      const glow = index === 0
-        ? "box-shadow: 0 0 15px rgba(212,175,55,0.5);"
-        : "";
+      const isRankOne = index === 0 ? "rank-1" : "";
 
       html += `
-        <div style="
-          margin-bottom:16px;
-          padding:12px;
-          border-radius:12px;
-          background: rgba(255,255,255,0.04);
-          ${glow}
-        ">
+        <div class="mplus-card ${isRankOne}">
           <div style="font-weight:600; font-size:15px; color:${color};">
             ${medal} ${player.name}
           </div>
 
-          <div style="
-            font-size:18px;
-            color:var(--wow-gold);
-            font-weight:700;
-            margin-top:4px;
-          ">
+          <div 
+            class="score-value"
+            data-player="${player.name}"
+            data-score="${player.seasonScore.toFixed(0)}"
+            style="color:var(--wow-gold);"
+          >
             ${player.seasonScore.toFixed(0)}
           </div>
         </div>
@@ -68,10 +59,38 @@ async function loadMythicHOF() {
 
     document.getElementById("mythic-hof").innerHTML = html;
 
+    animateScoreChanges();
+
   } catch (error) {
     document.getElementById("mythic-hof").innerHTML =
       `<h2>Mythic+ Hall of Fame</h2><p>Fehler beim Laden</p>`;
   }
+}
+
+/* -------- Score Animation Logic -------- */
+
+function animateScoreChanges() {
+
+  const scores = document.querySelectorAll(".score-value");
+
+  scores.forEach(el => {
+
+    const player = el.dataset.player;
+    const newScore = el.dataset.score;
+
+    const storageKey = "mplus-score-" + player;
+    const oldScore = localStorage.getItem(storageKey);
+
+    if (oldScore && oldScore !== newScore) {
+      el.classList.add("score-update");
+
+      setTimeout(() => {
+        el.classList.remove("score-update");
+      }, 900);
+    }
+
+    localStorage.setItem(storageKey, newScore);
+  });
 }
 
 document.addEventListener("DOMContentLoaded", loadMythicHOF);
