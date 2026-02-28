@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 
 let cache = { data: null, timestamp: 0 };
-const CACHE_TIME = 30 * 60 * 1000; // 30 Minuten
+const CACHE_TIME = 30 * 60 * 1000;
 
 export default async function handler(req, res) {
   try {
@@ -30,54 +30,48 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Blizzard Calendar API
-    const response = await fetch(
-      "https://eu.api.blizzard.com/data/wow/calendar/index?namespace=dynamic-eu&locale=de_DE",
+    // Holiday Index laden
+    const indexResponse = await fetch(
+      "https://eu.api.blizzard.com/data/wow/holiday/index?namespace=dynamic-eu&locale=de_DE",
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
 
-    const data = await response.json();
-
-    if (!data.events) {
-      return res.status(200).json({ active: [], upcoming: [] });
-    }
+    const indexData = await indexResponse.json();
 
     const now = Date.now();
-
     const active = [];
-    const upcoming = [];
 
-    data.events.forEach(event => {
+    // Für jede Holiday Details laden
+    for (const holiday of indexData.holidays) {
 
-      const start = new Date(event.start_time).getTime();
-      const end = new Date(event.end_time).getTime();
+      const detailResponse = await fetch(
+        `https://eu.api.blizzard.com/data/wow/holiday/${holiday.id}?namespace=dynamic-eu&locale=de_DE`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
 
-      const formatted = {
-        name: event.name,
-        start: event.start_time,
-        end: event.end_time
-      };
+      const detail = await detailResponse.json();
 
-      if (start <= now && end >= now) {
-        active.push(formatted);
-      }
+      if (!detail.instances) continue;
 
-      if (start > now) {
-        upcoming.push(formatted);
-      }
+      detail.instances.forEach(instance => {
+        const start = new Date(instance.start_time).getTime();
+        const end = new Date(instance.end_time).getTime();
 
-    });
+        if (start <= now && end >= now) {
+          active.push({
+            name: detail.name,
+            start: instance.start_time,
+            end: instance.end_time
+          });
+        }
+      });
+    }
 
-    upcoming.sort((a, b) =>
-      new Date(a.start) - new Date(b.start)
-    );
-
-    const result = {
-      active,
-      upcoming: upcoming.slice(0, 3) // nur nächste 3
-    };
+    const result = { active };
 
     cache = { data: result, timestamp: Date.now() };
 
