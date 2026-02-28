@@ -1,5 +1,3 @@
-import { Buffer } from "buffer";
-
 let cache = { data: null, timestamp: 0 };
 const CACHE_TIME = 30 * 60 * 1000;
 
@@ -10,90 +8,62 @@ export default async function handler(req, res) {
       return res.status(200).json(cache.data);
     }
 
-    const clientId = process.env.BLIZZARD_CLIENT_ID;
-    const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
-
-    const credentials = Buffer
-      .from(`${clientId}:${clientSecret}`)
-      .toString("base64");
-
-    const tokenResponse = await fetch("https://oauth.battle.net/token", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: "grant_type=client_credentials"
-    });
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    const rosterResponse = await fetch(
-      "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
-      {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }
+    const response = await fetch(
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members"
     );
 
-    const rosterData = await rosterResponse.json();
+    const data = await response.json();
 
-    if (!rosterData.members) {
-      return res.status(200).json({ active: false });
+    if (!data.members) {
+      return res.status(200).json({
+        activeCurrent: false,
+        currentSeason: [],
+        previousSeason: []
+      });
     }
 
-    const maxLevelPlayers = rosterData.members
-      .filter(m => m.character.level === 90);
+    const currentSeason = [];
+    const previousSeason = [];
 
-    const players = [];
+    data.members.forEach(m => {
 
-    for (const member of maxLevelPlayers) {
-      try {
+      const seasons = m.character.mythic_plus_scores_by_season;
+      if (!seasons || seasons.length === 0) return;
 
-        const profileResponse = await fetch(
-          `https://eu.api.blizzard.com/profile/wow/character/blackrock/${member.character.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-eu&locale=de_DE`,
-          {
-            headers: { Authorization: `Bearer ${accessToken}` }
-          }
-        );
+      const level = m.character.level;
 
-        if (!profileResponse.ok) continue;
+      const current = seasons[0]?.scores?.all || 0;
+      const previous = seasons[1]?.scores?.all || 0;
 
-        const profileData = await profileResponse.json();
-
-        const seasonScore =
-          profileData.current_mythic_rating?.rating || 0;
-
-        if (seasonScore > 0) {
-          players.push({
-            name: member.character.name,
-            classId: member.character.playable_class.id,
-            seasonScore
-          });
-        }
-
-      } catch {
-        continue;
+      // 🔵 Aktuelle Season → nur Level 90
+      if (level === 90 && current > 0) {
+        currentSeason.push({
+          name: m.character.name,
+          classId: m.character.class.id,
+          score: current
+        });
       }
-    }
 
-    if (players.length === 0) {
-      const result = {
-        active: false,
-        message: "Neue Mythic+ Season startet bald."
-      };
+      // 🟣 Letzte Season → unabhängig vom aktuellen Level
+      if (previous > 0) {
+        previousSeason.push({
+          name: m.character.name,
+          classId: m.character.class.id,
+          score: previous
+        });
+      }
 
-      cache = { data: result, timestamp: Date.now() };
-      return res.status(200).json(result);
-    }
-
-    const sorted = players
-      .sort((a, b) => b.seasonScore - a.seasonScore)
-      .slice(0, 10);
+    });
 
     const result = {
-      active: true,
-      players: sorted
+      activeCurrent: currentSeason.length > 0,
+      currentSeason: currentSeason
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5),
+
+      previousSeason: previousSeason
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
     };
 
     cache = { data: result, timestamp: Date.now() };
@@ -102,8 +72,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     res.status(200).json({
-      active: false,
-      message: "Hall of Fame derzeit nicht verfügbar."
+      activeCurrent: false,
+      currentSeason: [],
+      previousSeason: []
     });
   }
 }
