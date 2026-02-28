@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 let cache = { data: null, timestamp: 0 };
 const CACHE_TIME = 30 * 60 * 1000;
 
@@ -8,100 +10,91 @@ export default async function handler(req, res) {
       return res.status(200).json(cache.data);
     }
 
-    /* ------------------ Guild Members holen ------------------ */
+    const clientId = process.env.BLIZZARD_CLIENT_ID;
+    const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
 
-    const guildRes = await fetch(
-      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members"
+    const credentials = Buffer
+      .from(`${clientId}:${clientSecret}`)
+      .toString("base64");
+
+    /* ------------------ OAuth Token ------------------ */
+
+    const tokenResponse = await fetch("https://oauth.battle.net/token", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "grant_type=client_credentials"
+    });
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
+
+    /* ------------------ Guild Roster holen ------------------ */
+
+    const rosterResponse = await fetch(
+      "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
     );
 
-    const guildData = await guildRes.json();
+    const rosterData = await rosterResponse.json();
 
-    if (!guildData.members) {
-      return res.status(200).json({
-        activeCurrent: false,
-        currentSeason: [],
-        previousSeason: []
-      });
+    if (!rosterData.members) {
+      return res.status(200).json({ players: [] });
     }
 
-    /* ------------------ Filtern nach deinen Regeln ------------------ */
+    /* ------------------ Level 80–90 filtern ------------------ */
 
-    const validMembers = guildData.members.filter(m =>
-      m.rank <= 6 &&
-      m.rank !== 3
+    const validMembers = rosterData.members.filter(m =>
+      m.character.level >= 80 && m.character.level <= 90
     );
 
-    /* ------------------ Character Scores holen ------------------ */
-
     const players = [];
+
+    /* ------------------ Mythic Profile holen ------------------ */
 
     await Promise.all(validMembers.map(async (member) => {
       try {
 
         const char = member.character;
 
-        const charRes = await fetch(
-          `https://raider.io/api/v1/characters/profile?region=${char.region}&realm=${char.realm}&name=${encodeURIComponent(char.name)}&fields=mythic_plus_scores_by_season`
+        const profileResponse = await fetch(
+          `https://eu.api.blizzard.com/profile/wow/character/blackrock/${char.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-eu&locale=de_DE`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          }
         );
 
-        if (!charRes.ok) return;
+        if (!profileResponse.ok) return;
 
-        const charData = await charRes.json();
+        const profileData = await profileResponse.json();
 
-        if (!charData.mythic_plus_scores_by_season) return;
+        const score = profileData.current_mythic_rating?.rating || 0;
 
-        charData.mythic_plus_scores_by_season.forEach(season => {
+        if (score > 0) {
           players.push({
             name: char.name,
-            season: season.season,
-            score: season.scores?.all || 0
+            classId: char.playable_class.id,
+            level: char.level,
+            score: Math.round(score)
           });
-        });
+        }
 
       } catch {
         return;
       }
     }));
 
-    if (players.length === 0) {
-      return res.status(200).json({
-        activeCurrent: false,
-        currentSeason: [],
-        previousSeason: []
-      });
-    }
+    /* ------------------ Top 10 sortieren ------------------ */
 
-    /* ------------------ Seasons automatisch erkennen ------------------ */
-
-    const seasonMap = {};
-
-    players.forEach(p => {
-      if (!seasonMap[p.season]) seasonMap[p.season] = [];
-      seasonMap[p.season].push(p);
-    });
-
-    const sortedSeasons = Object.keys(seasonMap).sort().reverse();
-
-    const currentSeasonId = sortedSeasons[0];
-    const previousSeasonId = sortedSeasons[1];
-
-    const currentSeason = (seasonMap[currentSeasonId] || [])
+    const sorted = players
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 10);
 
-    const previousSeason = (seasonMap[previousSeasonId] || [])
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
-
-    const activeCurrent = currentSeason.some(p => p.score > 0);
-
-    const result = {
-      activeCurrent,
-      currentSeasonId,
-      previousSeasonId,
-      currentSeason,
-      previousSeason
-    };
+    const result = { players: sorted };
 
     cache = { data: result, timestamp: Date.now() };
 
