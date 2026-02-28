@@ -17,7 +17,6 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -30,7 +29,6 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Guild Roster
     const rosterResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
       {
@@ -41,10 +39,9 @@ export default async function handler(req, res) {
     const rosterData = await rosterResponse.json();
 
     if (!rosterData.members) {
-      return res.status(200).json({ players: [] });
+      return res.status(200).json({ active: false });
     }
 
-    // 🔥 Nur Maxlevel 90
     const maxLevelPlayers = rosterData.members
       .filter(m => m.character.level === 90);
 
@@ -67,30 +64,46 @@ export default async function handler(req, res) {
         const seasonScore =
           profileData.current_mythic_rating?.rating || 0;
 
-        if (seasonScore === 0) continue;
-
-        players.push({
-          name: member.character.name,
-          classId: member.character.playable_class.id,
-          seasonScore
-        });
+        if (seasonScore > 0) {
+          players.push({
+            name: member.character.name,
+            classId: member.character.playable_class.id,
+            seasonScore
+          });
+        }
 
       } catch {
         continue;
       }
     }
 
+    if (players.length === 0) {
+      const result = {
+        active: false,
+        message: "Neue Mythic+ Season startet bald."
+      };
+
+      cache = { data: result, timestamp: Date.now() };
+      return res.status(200).json(result);
+    }
+
     const sorted = players
       .sort((a, b) => b.seasonScore - a.seasonScore)
       .slice(0, 10);
 
-    const result = { players: sorted };
+    const result = {
+      active: true,
+      players: sorted
+    };
 
     cache = { data: result, timestamp: Date.now() };
 
     res.status(200).json(result);
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(200).json({
+      active: false,
+      message: "Hall of Fame derzeit nicht verfügbar."
+    });
   }
 }
