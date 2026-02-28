@@ -4,12 +4,12 @@ async function loadRaidTimeline() {
     const data = await res.json();
 
     const difficulties = [
-      { key: "NORMAL", label: "🟢 Normal Timeline" },
+      { key: "MYTHIC", label: "🟣 Mythic Timeline" },
       { key: "HEROIC", label: "🟠 Heroic Timeline" },
-      { key: "MYTHIC", label: "🟣 Mythic Timeline" }
+      { key: "NORMAL", label: "🟢 Normal Timeline" }
     ];
 
-    let html = `<h2>Raid Timeline – Midnight Season 1</h2>`;
+    let html = `<h2>Raid Timeline – Midnight</h2>`;
     html += `<div class="timeline-grid">`;
 
     difficulties.forEach(diff => {
@@ -66,7 +66,7 @@ async function loadRaidTimeline() {
 
   } catch (error) {
     document.getElementById("raid-timeline").innerHTML =
-      `<h2>Raid Timeline</h2><p>Fehler beim Laden</p>`;
+      `<h2>Raid Timeline – Midnight</h2><p>Fehler beim Laden</p>`;
   }
 }
 
