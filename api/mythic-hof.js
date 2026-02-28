@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 let cache = { data: null, timestamp: 0 };
 const CACHE_TIME = 30 * 60 * 1000;
 
@@ -8,60 +10,136 @@ export default async function handler(req, res) {
       return res.status(200).json(cache.data);
     }
 
-    const response = await fetch(
-      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members,mythic_plus_scores_by_season"
+    /* ------------------ Raider.io Guild holen ------------------ */
+
+    const guildRes = await fetch(
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members"
     );
 
-    const data = await response.json();
+    const guildData = await guildRes.json();
 
-    if (!data.members) {
-      return res.status(200).json({
-        activeCurrent: false,
-        currentSeason: [],
-        previousSeason: []
-      });
+    if (!guildData.members) {
+      return res.status(200).json({ activeCurrent: false, currentSeason: [], previousSeason: [] });
     }
 
-    const currentSeason = [];
-    const previousSeason = [];
+    /* ------------------ Filtern nach deinen Regeln ------------------ */
 
-    data.members.forEach(m => {
+    const filteredMembers = guildData.members.filter(m =>
+      m.rank <= 6 &&
+      m.rank !== 3
+    );
 
-      const seasons = m.character.mythic_plus_scores_by_season;
-      if (!seasons || seasons.length === 0) return;
+    /* ------------------ Blizzard Token holen (für Level 90 Check) ------------------ */
 
-      const level = m.character.level;
+    const clientId = process.env.BLIZZARD_CLIENT_ID;
+    const clientSecret = process.env.BLIZZARD_CLIENT_SECRET;
 
-      const current = seasons[0]?.scores?.all || 0;
-      const previous = seasons[1]?.scores?.all || 0;
+    const credentials = Buffer
+      .from(`${clientId}:${clientSecret}`)
+      .toString("base64");
 
-      if (level === 90 && current > 0) {
-        currentSeason.push({
-          name: m.character.name,
-          classId: m.character.class.id,
-          score: current
-        });
-      }
-
-      if (previous > 0) {
-        previousSeason.push({
-          name: m.character.name,
-          classId: m.character.class.id,
-          score: previous
-        });
-      }
-
+    const tokenResponse = await fetch("https://oauth.battle.net/token", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: "grant_type=client_credentials"
     });
 
-    const result = {
-      activeCurrent: currentSeason.length > 0,
-      currentSeason: currentSeason
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5),
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
 
-      previousSeason: previousSeason
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5)
+    /* ------------------ Nur Level 90 ------------------ */
+
+    const level90Members = [];
+
+    for (const member of filteredMembers) {
+
+      try {
+        const profileRes = await fetch(
+          `https://eu.api.blizzard.com/profile/wow/character/${member.character.realm.toLowerCase()}/${member.character.name.toLowerCase()}?namespace=profile-eu&locale=de_DE`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        if (!profileRes.ok) continue;
+
+        const profileData = await profileRes.json();
+
+        if (profileData.level === 90) {
+          level90Members.push(member.character);
+        }
+
+      } catch {
+        continue;
+      }
+    }
+
+    /* ------------------ Raider.io Character Scores holen ------------------ */
+
+    const players = [];
+
+    await Promise.all(level90Members.map(async (char) => {
+      try {
+
+        const charRes = await fetch(
+          `https://raider.io/api/v1/characters/profile?region=eu&realm=${char.realm.toLowerCase()}&name=${char.name}&fields=mythic_plus_scores_by_season`
+        );
+
+        if (!charRes.ok) return;
+
+        const charData = await charRes.json();
+
+        const seasons = charData.mythic_plus_scores_by_season;
+        if (!seasons || seasons.length === 0) return;
+
+        seasons.forEach(season => {
+          players.push({
+            name: char.name,
+            season: season.season,
+            score: season.scores?.all || 0
+          });
+        });
+
+      } catch {
+        return;
+      }
+    }));
+
+    if (players.length === 0) {
+      return res.status(200).json({ activeCurrent: false, currentSeason: [], previousSeason: [] });
+    }
+
+    /* ------------------ Seasons automatisch erkennen ------------------ */
+
+    const seasonMap = {};
+
+    players.forEach(p => {
+      if (!seasonMap[p.season]) seasonMap[p.season] = [];
+      seasonMap[p.season].push(p);
+    });
+
+    const sortedSeasons = Object.keys(seasonMap).sort().reverse();
+
+    const currentSeasonId = sortedSeasons[0];
+    const previousSeasonId = sortedSeasons[1];
+
+    const currentSeason = (seasonMap[currentSeasonId] || [])
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    const previousSeason = (seasonMap[previousSeasonId] || [])
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    const activeCurrent = currentSeason.some(p => p.score > 0);
+
+    const result = {
+      activeCurrent,
+      currentSeasonId,
+      previousSeasonId,
+      currentSeason,
+      previousSeason
     };
 
     cache = { data: result, timestamp: Date.now() };
@@ -69,10 +147,6 @@ export default async function handler(req, res) {
     res.status(200).json(result);
 
   } catch (error) {
-    res.status(200).json({
-      activeCurrent: false,
-      currentSeason: [],
-      previousSeason: []
-    });
+    res.status(500).json({ error: error.message });
   }
 }
