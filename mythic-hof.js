@@ -26,23 +26,29 @@ async function loadMythicHOF() {
       13:"#33937F"
     };
 
-    let html = `<h2>Mythic+ Hall of Fame -LVL90-</h2>`;
+    let html = `<h2>Mythic+ Hall of Fame -Lvl90-</h2>`;
 
     data.players.forEach((player, index) => {
 
-      let medal = "";
-      if (index === 0) medal = "🥇";
-      else if (index === 1) medal = "🥈";
-      else if (index === 2) medal = "🥉";
-      else medal = `#${index + 1}`;
-
       const color = CLASS_COLORS[player.classId] || "#ffffff";
-      const isRankOne = index === 0 ? "rank-1" : "";
+      const isRankOne = index === 0;
+      const rankClass = isRankOne ? "rank-1" : "";
+
+      let rankDisplay;
+      if (isRankOne) {
+        rankDisplay = `<span class="crown">👑</span>`;
+      } else if (index === 1) {
+        rankDisplay = "🥈";
+      } else if (index === 2) {
+        rankDisplay = "🥉";
+      } else {
+        rankDisplay = `#${index + 1}`;
+      }
 
       html += `
-        <div class="mplus-card ${isRankOne}">
-          <div style="font-weight:600; font-size:15px; color:${color};">
-            ${medal} ${player.name}
+        <div class="mplus-card ${rankClass}">
+          <div style="font-weight:600; font-size:15px; color:${color}; display:flex; align-items:center;">
+            ${rankDisplay} ${player.name}
           </div>
 
           <div 
@@ -68,9 +74,7 @@ async function loadMythicHOF() {
 }
 
 
-/* -------------------------
-   Score Update Animation
--------------------------- */
+/* Score Animation */
 
 function animateScoreChanges() {
 
