@@ -83,12 +83,13 @@ h1 {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 30px;
   align-items: start;
 
   max-width: 1100px;
   margin: 0 auto;
+  padding: 0 10px;
 }
 
 /* CARD */
@@ -156,16 +157,27 @@ h1 {
 
 @media (max-width: 600px) {
 
-  body { padding: 15px 12px; }
-  h1 { font-size: 18px; }
-  .hero-guild { padding: 20px; }
+  body { 
+    padding: 15px 12px; 
+  }
+
+  h1 { 
+    font-size: 18px; 
+  }
+
+  .hero-guild { 
+    padding: 20px;
+    margin: 0 12px 30px 12px;
+  }
 
   .grid {
     grid-template-columns: 1fr;
+    padding: 0 12px;
   }
 
   .card {
     width: 100%;
+    box-sizing: border-box;
   }
 
 }
