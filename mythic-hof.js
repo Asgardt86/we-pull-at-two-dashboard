@@ -26,7 +26,7 @@ async function loadMythicHOF() {
       13:"#33937F"
     };
 
-    let html = `<h2>Mythic+ Hall of Fame</h2>`;
+    let html = `<h2>Mythic+ Hall of Fame -LVL90-</h2>`;
 
     data.players.forEach((player, index) => {
 
