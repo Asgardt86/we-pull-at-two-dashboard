@@ -1,11 +1,12 @@
 import { Buffer } from "buffer";
 
 let cache = { data: null, timestamp: 0 };
-const CACHE_TIME = 30 * 60 * 1000;
+const CACHE_TIME = 30 * 60 * 1000; // 30 Minuten
 
 export default async function handler(req, res) {
   try {
 
+    // Cache nutzen
     if (cache.data && Date.now() - cache.timestamp < CACHE_TIME) {
       return res.status(200).json(cache.data);
     }
@@ -17,8 +18,7 @@ export default async function handler(req, res) {
       .from(`${clientId}:${clientSecret}`)
       .toString("base64");
 
-    /* ------------------ OAuth Token ------------------ */
-
+    // OAuth Token holen
     const tokenResponse = await fetch("https://oauth.battle.net/token", {
       method: "POST",
       headers: {
@@ -31,8 +31,7 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    /* ------------------ Guild Roster holen ------------------ */
-
+    // Gilden-Roster abrufen
     const rosterResponse = await fetch(
       "https://eu.api.blizzard.com/data/wow/guild/blackrock/we-pull-at-two/roster?namespace=profile-eu&locale=de_DE",
       {
@@ -46,50 +45,48 @@ export default async function handler(req, res) {
       return res.status(200).json({ players: [] });
     }
 
-    /* ------------------ Level 80–90 filtern ------------------ */
-
-    const validMembers = rosterData.members.filter(m =>
-      m.character.level >= 80 && m.character.level <= 90
-    );
-
     const players = [];
 
-    /* ------------------ Mythic Profile holen ------------------ */
+    // Alle Mitglieder durchgehen
+    for (const member of rosterData.members) {
 
-    await Promise.all(validMembers.map(async (member) => {
+      const level = member.character.level;
+
+      // 🔥 Nur Level 90
+      if (level !== 90) continue;
+
       try {
 
-        const char = member.character;
-
         const profileResponse = await fetch(
-          `https://eu.api.blizzard.com/profile/wow/character/blackrock/${char.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-eu&locale=de_DE`,
+          `https://eu.api.blizzard.com/profile/wow/character/${member.character.realm.slug}/${member.character.name.toLowerCase()}/mythic-keystone-profile?namespace=profile-eu&locale=de_DE`,
           {
             headers: { Authorization: `Bearer ${accessToken}` }
           }
         );
 
-        if (!profileResponse.ok) return;
+        if (!profileResponse.ok) continue;
 
         const profileData = await profileResponse.json();
 
-        const score = profileData.current_mythic_rating?.rating || 0;
+        const score =
+          profileData.current_mythic_rating?.rating || 0;
 
-        if (score > 0) {
-          players.push({
-            name: char.name,
-            classId: char.playable_class.id,
-            level: char.level,
-            score: Math.round(score)
-          });
-        }
+        // Nur Spieler mit Score anzeigen
+        if (score <= 0) continue;
+
+        players.push({
+          name: member.character.name,
+          classId: member.character.playable_class.id,
+          level: level,
+          score: Math.round(score)
+        });
 
       } catch {
-        return;
+        continue;
       }
-    }));
+    }
 
-    /* ------------------ Top 10 sortieren ------------------ */
-
+    // 🔥 Sortieren & Top 10
     const sorted = players
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
