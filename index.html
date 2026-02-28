@@ -86,7 +86,6 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(370px, 1fr));
   gap: 30px;
   align-items: start;
-
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -154,6 +153,45 @@ h1 {
   color: #9ca3af;
 }
 
+/* ===============================
+   Mythic+ Hall of Fame Upgrade
+================================= */
+
+.mplus-card {
+  margin-bottom:16px;
+  padding:12px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.04);
+  transition: all 0.3s ease;
+}
+
+.mplus-card:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.rank-1 {
+  box-shadow: 0 0 18px rgba(255,215,0,0.45);
+  background: linear-gradient(
+    90deg,
+    rgba(255,215,0,0.12),
+    rgba(255,215,0,0.04)
+  );
+}
+
+.score-value {
+  font-size:18px;
+  font-weight:700;
+  margin-top:4px;
+  transition: transform 0.4s ease, color 0.4s ease;
+}
+
+.score-update {
+  transform: scale(1.2);
+  color: #22c55e !important;
+}
+
+/* MOBILE */
+
 @media (max-width: 600px) {
 
   body { padding: 15px 12px; }
@@ -166,7 +204,7 @@ h1 {
   }
 
   .grid {
-    display: block;   /* WICHTIG */
+    display: block;
     padding: 0 12px;
   }
 
