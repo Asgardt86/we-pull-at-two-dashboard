@@ -48,10 +48,10 @@ async function loadMythicHOF() {
           <div 
             class="score-value"
             data-player="${player.name}"
-            data-score="${player.seasonScore.toFixed(0)}"
+            data-score="${player.score}"
             style="color:var(--wow-gold);"
           >
-            ${player.seasonScore.toFixed(0)}
+            ${player.score}
           </div>
         </div>
       `;
@@ -67,7 +67,10 @@ async function loadMythicHOF() {
   }
 }
 
-/* -------- Score Animation Logic -------- */
+
+/* -------------------------
+   Score Update Animation
+-------------------------- */
 
 function animateScoreChanges() {
 
