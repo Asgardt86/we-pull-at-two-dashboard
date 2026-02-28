@@ -86,6 +86,9 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 30px;
   align-items: start;
+
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 /* CARD */
@@ -152,9 +155,19 @@ h1 {
 }
 
 @media (max-width: 600px) {
+
   body { padding: 15px 12px; }
   h1 { font-size: 18px; }
   .hero-guild { padding: 20px; }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    width: 100%;
+  }
+
 }
 
 </style>
