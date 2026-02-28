@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     }
 
     const response = await fetch(
-      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members"
+      "https://raider.io/api/v1/guilds/profile?region=eu&realm=blackrock&name=We%20Pull%20at%20Two&fields=members,mythic_plus_scores_by_season"
     );
 
     const data = await response.json();
@@ -35,7 +35,6 @@ export default async function handler(req, res) {
       const current = seasons[0]?.scores?.all || 0;
       const previous = seasons[1]?.scores?.all || 0;
 
-      // 🔵 Aktuelle Season → nur Level 90
       if (level === 90 && current > 0) {
         currentSeason.push({
           name: m.character.name,
@@ -44,7 +43,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // 🟣 Letzte Season → unabhängig vom aktuellen Level
       if (previous > 0) {
         previousSeason.push({
           name: m.character.name,
